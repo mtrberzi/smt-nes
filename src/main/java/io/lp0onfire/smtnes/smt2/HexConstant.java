@@ -22,6 +22,8 @@ public class HexConstant extends SExpression {
           } else {
             throw new IllegalArgumentException("hex constant must consist only of digits 0-9a-fA-F");
           }
+        } else {
+          throw new IllegalArgumentException("hex constant must consist only of digits 0-9a-fA-F");
         }
       }
     }
