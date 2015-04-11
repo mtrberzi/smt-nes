@@ -4,6 +4,9 @@ package io.lp0onfire.smtnes.smt2;
 public class Numeral extends SExpression {
 
   private final String digits;
+  public String getDigits() {
+    return this.digits;
+  }
   
   public void verifyDigits(String digits) {
     if (digits.length() == 0) {
