@@ -4,13 +4,14 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
-public abstract class ExpressionList extends SExpression {
+public class ExpressionList extends SExpression {
 
-  private List<SExpression> exprs = new LinkedList<SExpression>();
+  private final List<SExpression> exprs;
   public List<SExpression> getExprs() {
     return this.exprs;
   }
-  public void setExprs(SExpression... values) {
+  
+  public ExpressionList(SExpression... values) {
     exprs = new LinkedList<SExpression>(Arrays.asList(values));
   }
   
