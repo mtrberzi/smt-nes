@@ -6,7 +6,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.ArrayUtils;
 
-public class IndexedIdentifier extends ExpressionList {
+public class IndexedIdentifier extends ExpressionList implements Identifier {
   
   // Indexed identifiers are defined as the application
   // of the reserved word _ to a symbol

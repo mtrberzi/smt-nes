@@ -1,6 +1,6 @@
 package io.lp0onfire.smtnes.smt2;
 
-public class Symbol extends SExpression {
+public class Symbol extends SExpression implements Identifier {
 
   private final String name;
   public String getName() {
