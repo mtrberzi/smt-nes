@@ -13,7 +13,14 @@ public class IndexedIdentifier extends ExpressionList {
   // and one or more indices, given by numerals.
   
   private final Symbol symbol;
+  public Symbol getSymbol() {
+    return this.symbol;
+  }
+  
   private final List<Numeral> indices;
+  public List<Numeral> getIndices() {
+    return this.indices;
+  }
   
   public IndexedIdentifier(Symbol sym, Numeral... numerals) {
     super(ArrayUtils.addAll(new SExpression[]{
