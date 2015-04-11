@@ -15,6 +15,10 @@ public class ExpressionList extends SExpression {
     exprs = new LinkedList<SExpression>(Arrays.asList(values));
   }
   
+  public ExpressionList(List<SExpression> values) {
+    exprs = new LinkedList<SExpression>(values);
+  }
+  
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
