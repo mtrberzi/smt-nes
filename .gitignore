@@ -20,4 +20,6 @@ hs_err_pid*
 .project
 .settings/**
 
-/bin/
+bin/
+
+build/
