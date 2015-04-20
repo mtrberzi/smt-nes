@@ -1,7 +1,7 @@
 package io.lp0onfire.smtnes;
 
-import io.lp0onfire.smtnes.smt2.IndexedIdentifier;
 import io.lp0onfire.smtnes.smt2.SExpression;
+import io.lp0onfire.smtnes.smt2.Symbol;
 
 import java.util.List;
 import java.util.Map;
@@ -18,6 +18,6 @@ public interface CodeGenerator {
   // will be provided as arguments.
   List<String> getStateVariablesWritten();
   
-  List<SExpression> generateCode(Map<String, IndexedIdentifier> inputs, Map<String, IndexedIdentifier> outputs);
+  List<SExpression> generateCode(Map<String, Symbol> inputs, Map<String, Symbol> outputs);
   
 }

@@ -1,6 +1,6 @@
 package io.lp0onfire.smtnes;
 
-import io.lp0onfire.smtnes.smt2.IndexedIdentifier;
+import io.lp0onfire.smtnes.smt2.Symbol;
 import io.lp0onfire.smtnes.smt2.SExpression;
 
 import java.util.Arrays;
@@ -29,16 +29,15 @@ public class TestStateVariableRegistry {
       }
 
       @Override
-      public List<SExpression> generateCode(Map<String, IndexedIdentifier> inputs,
-          Map<String, IndexedIdentifier> outputs) {
+      public List<SExpression> generateCode(Map<String, Symbol> inputs,
+          Map<String, Symbol> outputs) {
         // we expect to receive no inputs
         assertTrue("received unexpected input", inputs.isEmpty());
         // we expect to receive one output, called "foo"
         assertTrue("received wrong number of outputs", outputs.size() == 1);
         // check that we got (_ foo 0)
-        IndexedIdentifier foo = outputs.get("foo");
-        assertEquals("output 'foo' has wrong symbol name", "foo", foo.getSymbol().getName());
-        assertEquals("output 'foo' has wrong index", "0", foo.getIndices().get(0).getDigits());
+        Symbol foo = outputs.get("foo");
+        assertEquals("output 'foo' has wrong symbol name", "foo_0", foo.getName());
         return new LinkedList<>();
       }
     };
@@ -60,8 +59,8 @@ public class TestStateVariableRegistry {
       }
 
       @Override
-      public List<SExpression> generateCode(Map<String, IndexedIdentifier> inputs,
-          Map<String, IndexedIdentifier> outputs) {
+      public List<SExpression> generateCode(Map<String, Symbol> inputs,
+          Map<String, Symbol> outputs) {
         return new LinkedList<>();
       }
     };
@@ -85,8 +84,8 @@ public class TestStateVariableRegistry {
 
       @Override
       public List<SExpression> generateCode(
-          Map<String, IndexedIdentifier> inputs,
-          Map<String, IndexedIdentifier> outputs) {
+          Map<String, Symbol> inputs,
+          Map<String, Symbol> outputs) {
         return new LinkedList<>();
       }
       
@@ -105,19 +104,17 @@ public class TestStateVariableRegistry {
 
       @Override
       public List<SExpression> generateCode(
-          Map<String, IndexedIdentifier> inputs,
-          Map<String, IndexedIdentifier> outputs) {
-        // we should see input: (_ foo 0) and output: (_ foo 1)
+          Map<String, Symbol> inputs,
+          Map<String, Symbol> outputs) {
+        // we should see input: foo_0 and output: foo_1
         
         assertTrue(inputs.containsKey("foo"));
-        IndexedIdentifier foo_in = inputs.get("foo");
-        assertEquals("input 'foo' has wrong symbol name", "foo", foo_in.getSymbol().getName());
-        assertEquals("input 'foo' has wrong index", "0", foo_in.getIndices().get(0).getDigits());
+        Symbol foo_in = inputs.get("foo");
+        assertEquals("input 'foo' has wrong symbol name", "foo_0", foo_in.getName());
         
         assertTrue(outputs.containsKey("foo"));
-        IndexedIdentifier foo_out = outputs.get("foo");
-        assertEquals("output 'foo' has wrong symbol name", "foo", foo_out.getSymbol().getName());
-        assertEquals("output 'foo' has wrong index", "1", foo_out.getIndices().get(0).getDigits());
+        Symbol foo_out = outputs.get("foo");
+        assertEquals("output 'foo' has wrong symbol name", "foo_1", foo_out.getName());
         
         return new LinkedList<>();
       }

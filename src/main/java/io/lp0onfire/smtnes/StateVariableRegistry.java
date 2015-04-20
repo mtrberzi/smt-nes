@@ -1,7 +1,5 @@
 package io.lp0onfire.smtnes;
 
-import io.lp0onfire.smtnes.smt2.IndexedIdentifier;
-import io.lp0onfire.smtnes.smt2.Numeral;
 import io.lp0onfire.smtnes.smt2.SExpression;
 import io.lp0onfire.smtnes.smt2.Symbol;
 
@@ -15,7 +13,7 @@ public class StateVariableRegistry {
   
   public List<SExpression> apply(CodeGenerator gen) {
     List<String> variablesRead = gen.getStateVariablesRead();
-    Map<String, IndexedIdentifier> inputs = new HashMap<>();
+    Map<String, Symbol> inputs = new HashMap<>();
     for (String var : variablesRead) {
       // if the variable doesn't exist yet, throw an exception
       if (!stateIndex.containsKey(var)) {
@@ -23,10 +21,10 @@ public class StateVariableRegistry {
       }
       // otherwise, get the index of the latest version
       Long idx = stateIndex.get(var);
-      inputs.put(var, new IndexedIdentifier(new Symbol(var), new Numeral(idx.toString())));
+      inputs.put(var, new Symbol(var + "_" + idx.toString()));
     }
     List<String> variablesWritten = gen.getStateVariablesWritten();
-    Map<String, IndexedIdentifier> outputs = new HashMap<>();
+    Map<String, Symbol> outputs = new HashMap<>();
     for (String var : variablesWritten) {
       Long idx;
       if (stateIndex.containsKey(var)) {
@@ -38,7 +36,7 @@ public class StateVariableRegistry {
         idx = 0L;
         stateIndex.put(var, 0L);
       }
-      outputs.put(var, new IndexedIdentifier(new Symbol(var), new Numeral(idx.toString())));
+      outputs.put(var, new Symbol(var + "_" + idx.toString()));
     }
     // run the generator
     return gen.generateCode(inputs, outputs);
