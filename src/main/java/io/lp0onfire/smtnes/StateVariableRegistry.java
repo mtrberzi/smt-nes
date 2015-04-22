@@ -6,13 +6,14 @@ import io.lp0onfire.smtnes.smt2.Symbol;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class StateVariableRegistry {
 
   private Map<String, Long> stateIndex = new HashMap<>();
   
   public List<SExpression> apply(CodeGenerator gen) {
-    List<String> variablesRead = gen.getStateVariablesRead();
+    Set<String> variablesRead = gen.getStateVariablesRead();
     Map<String, Symbol> inputs = new HashMap<>();
     for (String var : variablesRead) {
       // if the variable doesn't exist yet, throw an exception
@@ -23,7 +24,7 @@ public class StateVariableRegistry {
       Long idx = stateIndex.get(var);
       inputs.put(var, new Symbol(var + "_" + idx.toString()));
     }
-    List<String> variablesWritten = gen.getStateVariablesWritten();
+    Set<String> variablesWritten = gen.getStateVariablesWritten();
     Map<String, Symbol> outputs = new HashMap<>();
     for (String var : variablesWritten) {
       Long idx;

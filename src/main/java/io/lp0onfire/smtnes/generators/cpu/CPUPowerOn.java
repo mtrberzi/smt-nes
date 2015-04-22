@@ -1,9 +1,11 @@
 package io.lp0onfire.smtnes.generators.cpu;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -23,15 +25,15 @@ import io.lp0onfire.smtnes.smt2.*;
 public class CPUPowerOn implements CodeGenerator {
   
   @Override
-  public List<String> getStateVariablesRead() {
-    return new LinkedList<>();
+  public Set<String> getStateVariablesRead() {
+    return new HashSet<>();
   }
 
   @Override
-  public List<String> getStateVariablesWritten() {
-    return Arrays.asList("CPU_RAM", 
+  public Set<String> getStateVariablesWritten() {
+    return new HashSet<>(Arrays.asList("CPU_RAM", 
         "CPU_A", "CPU_X", "CPU_Y", "CPU_PC", "CPU_SP", "CPU_P", 
-        "CPU_CalcAddr", "CPU_TmpAddr", "CPU_BranchOffset");
+        "CPU_CalcAddr", "CPU_TmpAddr", "CPU_BranchOffset"));
   }
 
   @Override

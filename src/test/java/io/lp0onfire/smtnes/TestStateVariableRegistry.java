@@ -4,9 +4,11 @@ import io.lp0onfire.smtnes.smt2.Symbol;
 import io.lp0onfire.smtnes.smt2.SExpression;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.junit.Test;
 
@@ -19,13 +21,13 @@ public class TestStateVariableRegistry {
     StateVariableRegistry reg = new StateVariableRegistry();
     CodeGenerator gen  = new CodeGenerator(){
       @Override
-      public List<String> getStateVariablesRead() {
-        return new LinkedList<>();
+      public Set<String> getStateVariablesRead() {
+        return new HashSet<>();
       }
 
       @Override
-      public List<String> getStateVariablesWritten() {
-        return Arrays.asList("foo");
+      public Set<String> getStateVariablesWritten() {
+        return new HashSet<>(Arrays.asList("foo"));
       }
 
       @Override
@@ -49,13 +51,13 @@ public class TestStateVariableRegistry {
     StateVariableRegistry reg = new StateVariableRegistry();
     CodeGenerator gen  = new CodeGenerator(){
       @Override
-      public List<String> getStateVariablesRead() {
-        return Arrays.asList("foo");
+      public Set<String> getStateVariablesRead() {
+        return new HashSet<>(Arrays.asList("foo"));
       }
 
       @Override
-      public List<String> getStateVariablesWritten() {
-        return new LinkedList<>();
+      public Set<String> getStateVariablesWritten() {
+        return new HashSet<>();
       }
 
       @Override
@@ -73,13 +75,13 @@ public class TestStateVariableRegistry {
     CodeGenerator init = new CodeGenerator() {
 
       @Override
-      public List<String> getStateVariablesRead() {
-        return new LinkedList<>();
+      public Set<String> getStateVariablesRead() {
+        return new HashSet<>();
       }
 
       @Override
-      public List<String> getStateVariablesWritten() {
-        return Arrays.asList("foo");
+      public Set<String> getStateVariablesWritten() {
+        return new HashSet<>(Arrays.asList("foo"));
       }
 
       @Override
@@ -93,13 +95,13 @@ public class TestStateVariableRegistry {
     CodeGenerator update = new CodeGenerator() {
 
       @Override
-      public List<String> getStateVariablesRead() {
-        return Arrays.asList("foo");
+      public Set<String> getStateVariablesRead() {
+        return new HashSet<>(Arrays.asList("foo"));
       }
 
       @Override
-      public List<String> getStateVariablesWritten() {
-        return Arrays.asList("foo");
+      public Set<String> getStateVariablesWritten() {
+        return new HashSet<>(Arrays.asList("foo"));
       }
 
       @Override
