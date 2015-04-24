@@ -21,6 +21,10 @@ import io.lp0onfire.smtnes.smt2.*;
  * - PC: program counter (width=16)
  * - CalcAddr, TmpAddr: addressing mode calculation temporaries (width=16)
  * - BranchOffset: branch calculation temporary (width=8)
+ * - AddressBus: external memory address (width=16)
+ * - WriteEnable: external memory write enable: 1=write, 0=read (width=1)
+ * - DataOut: external memory data leaving CPU (width=8)
+ * - DataIn: external memory data entering CPU (width=8)
  */
 public class CPUPowerOn implements CodeGenerator {
   
@@ -33,7 +37,8 @@ public class CPUPowerOn implements CodeGenerator {
   public Set<String> getStateVariablesWritten() {
     return new HashSet<>(Arrays.asList("CPU_RAM", 
         "CPU_A", "CPU_X", "CPU_Y", "CPU_PC", "CPU_SP", "CPU_P", 
-        "CPU_CalcAddr", "CPU_TmpAddr", "CPU_BranchOffset"));
+        "CPU_CalcAddr", "CPU_TmpAddr", "CPU_BranchOffset",
+        "CPU_AddressBus", "CPU_WriteEnable", "CPU_DataOut", "CPU_DataIn"));
   }
 
   @Override
@@ -91,6 +96,24 @@ public class CPUPowerOn implements CodeGenerator {
     Symbol BranchOffset = outputs.get("CPU_BranchOffset");
     exprs.add(new BitVectorDeclaration(BranchOffset, new Numeral("8")));
     exprs.add(new Assertion(new EqualsExpression(BranchOffset, new BinaryConstant("00000000"))));
+    
+    // declare memory bus variables AddressBus, WriteEnable, DataOut, DataIn and set to 0
+    
+    Symbol AddressBus = outputs.get("CPU_AddressBus");
+    exprs.add(new BitVectorDeclaration(AddressBus, new Numeral("16")));
+    exprs.add(new Assertion(new EqualsExpression(AddressBus, new BinaryConstant("0000000000000000"))));
+    
+    Symbol WriteEnable = outputs.get("CPU_WriteEnable");
+    exprs.add(new BitVectorDeclaration(WriteEnable, new Numeral("1")));
+    exprs.add(new Assertion(new EqualsExpression(WriteEnable, new BinaryConstant("0"))));
+    
+    Symbol DataOut = outputs.get("CPU_DataOut");
+    exprs.add(new BitVectorDeclaration(DataOut, new Numeral("8")));
+    exprs.add(new Assertion(new EqualsExpression(DataOut, new BinaryConstant("00000000"))));
+
+    Symbol DataIn = outputs.get("CPU_DataIn");
+    exprs.add(new BitVectorDeclaration(DataIn, new Numeral("8")));
+    exprs.add(new Assertion(new EqualsExpression(DataIn, new BinaryConstant("00000000"))));
     
     return exprs;
   }
