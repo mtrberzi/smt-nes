@@ -11,7 +11,11 @@ repositories {
 }
 
 sourceSets {
-  intTest
+  intTest {
+    java.srcDir file('src/intTest/java')
+    compileClasspath += sourceSets.test.compileClasspath
+    runtimeClasspath += sourceSets.test.runtimeClasspath
+  }
 }
 
 dependencies {
