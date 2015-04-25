@@ -64,6 +64,8 @@ public class STP implements AutoCloseable {
     InputStream is = stpProcess.getInputStream();
     InputStreamReader isr = new InputStreamReader(is);
     reader = new BufferedReader(isr);
+    
+    write("(set-logic QF_ABV)");
   }
   
   public void write(String data) throws IOException {
