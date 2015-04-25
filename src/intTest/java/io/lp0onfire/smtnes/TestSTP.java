@@ -23,7 +23,13 @@ public class TestSTP {
   
   @Test(timeout=1000)
   public void testSimpleSMT2() throws Exception {
-    
+    try(STP stp = new STP()) {
+      stp.open();
+      stp.write("(set-logic QF_ABV)");
+      stp.write("(declare-fun x () (_ BitVec 6))");
+      stp.write("(assert (= (bvnot x) x))");
+      assertFalse(stp.checkSat());
+    }
   }
   
 }
