@@ -1,5 +1,6 @@
 package io.lp0onfire.smtnes.generators.cpu;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -20,16 +21,16 @@ import io.lp0onfire.smtnes.smt2.*;
 
 public class CPUMemoryControllerFrontHalf implements CodeGenerator {
 
-  private PageHandler[] pageHandler = new PageHandler[16];
+  private List<PageHandler> pageHandlers = new ArrayList<>();
   private Set<String> uniquePageHandlerPrefixes = new HashSet<>();
   
-  public CPUMemoryControllerFrontHalf(PageHandler[] pageHandler) {
-    if (pageHandler.length != 16) {
+  public CPUMemoryControllerFrontHalf(List<PageHandler> pageHandlers) {
+    if (pageHandlers.size() != 16) {
       throw new IllegalArgumentException("must provide exactly 16 page handlers");
     }
-    for (int i = 0; i < pageHandler.length; ++i) {
-      this.pageHandler[i] = pageHandler[i];
-      uniquePageHandlerPrefixes.add(pageHandler[i].getHandlerPrefix());
+    for (int i = 0; i < pageHandlers.size(); ++i) {
+      this.pageHandlers.add(pageHandlers.get(i));
+      uniquePageHandlerPrefixes.add(pageHandlers.get(i).getHandlerPrefix());
     }
   }
 
@@ -87,7 +88,7 @@ public class CPUMemoryControllerFrontHalf implements CodeGenerator {
       // if the upper four bits of the address map to page N, set the chip select line for handler N to 1
       // and all other chip select lines to 0
       
-      String assertedChipSelect = pageHandler[i].getHandlerPrefix() + "ChipSelect";
+      String assertedChipSelect = pageHandlers.get(i).getHandlerPrefix() + "ChipSelect";
       for (Symbol chipSelect : chipSelectLines) {
         if (chipSelect.getName().equals(assertedChipSelect)) {
           exprs.add(new Assertion(new ImpliesExpression(new EqualsExpression(addressPage, pageNumber), 
