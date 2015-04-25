@@ -21,7 +21,7 @@ import io.lp0onfire.smtnes.smt2.*;
 
 public class CPUMemoryControllerFrontHalf implements CodeGenerator {
 
-  private List<PageHandler> pageHandlers = new ArrayList<>();
+  private ArrayList<PageHandler> pageHandlers = new ArrayList<>();
   private Set<String> uniquePageHandlerPrefixes = new HashSet<>();
   
   public CPUMemoryControllerFrontHalf(List<PageHandler> pageHandlers) {
