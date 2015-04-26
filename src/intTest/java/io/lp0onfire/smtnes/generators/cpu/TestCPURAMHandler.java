@@ -33,6 +33,8 @@ public class TestCPURAMHandler {
   // use InitCPURAM to get CPU_RAM, BusDriver to get CPU_{addr,we,do},
   // ChipSelectDriver to get (prefix)ChipSelect
   
+  private static BinaryConstant ramInitialValue = new BinaryConstant("10100101");
+  
   class InitCPURAM implements CodeGenerator {
 
     @Override
@@ -60,7 +62,7 @@ public class TestCPURAMHandler {
         int zeroCount = 11 - bits.length();
         BinaryConstant index = new BinaryConstant(StringUtils.repeat('0', zeroCount) + bits);
         exprs.add(new Assertion(new EqualsExpression(
-            new ArrayReadExpression(RAM, index), new BinaryConstant("10100101"))));
+            new ArrayReadExpression(RAM, index), ramInitialValue)));
       }
       return exprs;
     }
@@ -101,6 +103,41 @@ public class TestCPURAMHandler {
     
   }
   
+  class VerifyRAMContents implements CodeGenerator {
+
+    private final BinaryConstant readAddr;
+    private final BinaryConstant expectedValue;
+    
+    public VerifyRAMContents(BinaryConstant readAddr, BinaryConstant expectedValue) {
+      this.readAddr = readAddr;
+      this.expectedValue = expectedValue;
+    }
+    
+    @Override
+    public Set<String> getStateVariablesRead() {
+      return new HashSet<String>(Arrays.asList(new String[]{
+          "CPU_RAM"
+      }));
+    }
+
+    @Override
+    public Set<String> getStateVariablesWritten() {
+      return new HashSet<>();
+    }
+
+    @Override
+    public List<SExpression> generateCode(Map<String, Symbol> inputs,
+        Map<String, Symbol> outputs) {
+      List<SExpression> exprs = new LinkedList<>();
+      
+      Symbol RAM = inputs.get("CPU_RAM");
+      exprs.add(new Assertion(new EqualsExpression(new ArrayReadExpression(RAM, readAddr), expectedValue)));
+      
+      return exprs;
+    }
+    
+  }
+  
   @Test(timeout=5000)
   public void testSyntaxOK() throws IOException {
     List<SExpression> exprs = new LinkedList<>();
@@ -115,6 +152,41 @@ public class TestCPURAMHandler {
     exprs.addAll(reg.apply(csDrive));
     exprs.addAll(reg.apply(busDrive));
     exprs.addAll(reg.apply(ramHandler));
+    
+    try(Z3 z3 = new Z3()) {
+      z3.open();
+      for(SExpression expr : exprs) {
+        z3.write(expr.toString());
+      }
+      assertTrue(z3.checkSat());
+    }
+  }
+  
+  @Test(timeout=5000)
+  public void testCSLow_MemoryUnchanged() throws IOException {
+    List<SExpression> exprs = new LinkedList<>();
+    StateVariableRegistry reg = new StateVariableRegistry();
+    
+    String addrLowBits = "00000000000";
+    
+    BinaryConstant targetAddr = new BinaryConstant("0000" + "0" + addrLowBits);
+    BinaryConstant ramAddr = new BinaryConstant(addrLowBits);
+    
+    PageHandler ramHandler = new CPURAMHandler();
+    CodeGenerator ramInit = new InitCPURAM();
+    CodeGenerator csDrive = new ChipSelectDriver(ramHandler.getHandlerPrefix(), new BinaryConstant("0"));
+    CodeGenerator busDrive = new BusDriver(
+        targetAddr, new BinaryConstant("1"), new BinaryConstant("11111111"));
+    CodeGenerator verifier = new VerifyRAMContents(ramAddr, ramInitialValue);
+    
+    // If CS is low, the memory should not change.
+    
+    exprs.addAll(reg.apply(ramInit));
+    exprs.addAll(reg.apply(csDrive));
+    exprs.addAll(reg.apply(busDrive));
+    exprs.addAll(reg.apply(verifier));
+    exprs.addAll(reg.apply(ramHandler));
+    exprs.addAll(reg.apply(verifier));
     
     try(Z3 z3 = new Z3()) {
       z3.open();
