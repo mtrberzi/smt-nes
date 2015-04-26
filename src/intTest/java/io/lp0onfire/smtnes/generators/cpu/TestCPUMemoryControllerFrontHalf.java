@@ -13,7 +13,7 @@ import java.util.Set;
 import org.junit.Test;
 
 import io.lp0onfire.smtnes.PageHandler;
-import io.lp0onfire.smtnes.STP;
+import io.lp0onfire.smtnes.Z3;
 import io.lp0onfire.smtnes.StateVariableRegistry;
 import io.lp0onfire.smtnes.smt2.Assertion;
 import io.lp0onfire.smtnes.smt2.BinaryConstant;
@@ -97,12 +97,12 @@ public class TestCPUMemoryControllerFrontHalf {
     exprs.addAll(reg.apply(new BusDriver(new BinaryConstant("0000000000000000"), new BinaryConstant("0"), new BinaryConstant("00000000"))));
     exprs.addAll(reg.apply(memoryFront));
     
-    try(STP stp = new STP()) {
-      stp.open();
+    try(Z3 z3 = new Z3()) {
+      z3.open();
       for(SExpression expr : exprs) {
-        stp.write(expr.toString());
+        z3.write(expr.toString());
       }
-      assertTrue(stp.checkSat());
+      assertTrue(z3.checkSat());
     }
   }
   
@@ -123,12 +123,12 @@ public class TestCPUMemoryControllerFrontHalf {
     exprs.addAll(reg.apply(memoryFront));
     exprs.addAll(reg.apply(csHandler));
     
-    try(STP stp = new STP()) {
-      stp.open();
+    try(Z3 z3 = new Z3()) {
+      z3.open();
       for(SExpression expr : exprs) {
-        stp.write(expr.toString());
+        z3.write(expr.toString());
       }
-      assertTrue(stp.checkSat());
+      assertTrue(z3.checkSat());
     }
   }
  
@@ -149,12 +149,12 @@ public class TestCPUMemoryControllerFrontHalf {
     exprs.addAll(reg.apply(memoryFront));
     exprs.addAll(reg.apply(csHandler));
     
-    try(STP stp = new STP()) {
-      stp.open();
+    try(Z3 z3 = new Z3()) {
+      z3.open();
       for(SExpression expr : exprs) {
-        stp.write(expr.toString());
+        z3.write(expr.toString());
       }
-      assertTrue(stp.checkSat());
+      assertTrue(z3.checkSat());
     }
   }
   

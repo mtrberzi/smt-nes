@@ -15,7 +15,7 @@ import org.junit.Test;
 
 import io.lp0onfire.smtnes.CodeGenerator;
 import io.lp0onfire.smtnes.PageHandler;
-import io.lp0onfire.smtnes.STP;
+import io.lp0onfire.smtnes.Z3;
 import io.lp0onfire.smtnes.StateVariableRegistry;
 import io.lp0onfire.smtnes.smt2.ArrayDeclaration;
 import io.lp0onfire.smtnes.smt2.ArrayReadExpression;
@@ -116,12 +116,12 @@ public class TestCPURAMHandler {
     exprs.addAll(reg.apply(busDrive));
     exprs.addAll(reg.apply(ramHandler));
     
-    try(STP stp = new STP()) {
-      stp.open();
+    try(Z3 z3 = new Z3()) {
+      z3.open();
       for(SExpression expr : exprs) {
-        stp.write(expr.toString());
+        z3.write(expr.toString());
       }
-      assertTrue(stp.checkSat());
+      assertTrue(z3.checkSat());
     }
   }
   

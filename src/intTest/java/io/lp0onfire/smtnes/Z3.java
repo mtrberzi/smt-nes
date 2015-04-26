@@ -13,55 +13,56 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-public class STP implements AutoCloseable {
+public class Z3 implements AutoCloseable {
 
-  private static String pathToSTP = null;
+  private static String pathToZ3 = null;
   
-  private void findSTP() throws FileNotFoundException {
+  private void findZ3() throws FileNotFoundException {
     Map<String, String> env = System.getenv();
     if (env.containsKey("PATH")) {
       String[] paths = env.get("PATH").split(":");
       for (String path : paths) {
-        File stp = new File(path + "/stp");
+        File stp = new File(path + "/z3");
         if (stp.exists() && !stp.isDirectory() && stp.canExecute()) {
-          pathToSTP = path + "/stp";
+          pathToZ3 = path + "/z3";
           break;
         }
       }
     } else {
-      File stp = new File("./stp");
+      File stp = new File("./z3");
       if (stp.exists() && !stp.isDirectory() && stp.canExecute()) {
-        pathToSTP = "./stp";
+        pathToZ3 = "./z3";
       }
     }
-    if (pathToSTP == null) {
-      throw new FileNotFoundException("cannot find STP executable");
+    if (pathToZ3 == null) {
+      throw new FileNotFoundException("cannot find Z3 executable");
     }
   }
   
-  public STP() throws FileNotFoundException {
-    if (pathToSTP == null) {
-      findSTP();
+  public Z3() throws FileNotFoundException {
+    if (pathToZ3 == null) {
+      findZ3();
     }
   }
 
-  private Process stpProcess = null;
+  private Process z3Process = null;
   private BufferedWriter writer;
   private BufferedReader reader;
   
   public void open() throws IOException {
     List<String> command = new LinkedList<>();
-    command.add(pathToSTP);
-    command.add("--SMTLIB2");
+    command.add(pathToZ3);
+    command.add("-smt2");
+    command.add("-in");
     ProcessBuilder builder = new ProcessBuilder(command);
     builder.redirectErrorStream(true);
-    stpProcess = builder.start();
+    z3Process = builder.start();
     
-    OutputStream os = stpProcess.getOutputStream();
+    OutputStream os = z3Process.getOutputStream();
     OutputStreamWriter osw = new OutputStreamWriter(os);
     writer = new BufferedWriter(osw);
     
-    InputStream is = stpProcess.getInputStream();
+    InputStream is = z3Process.getInputStream();
     InputStreamReader isr = new InputStreamReader(is);
     reader = new BufferedReader(isr);
     
@@ -69,7 +70,7 @@ public class STP implements AutoCloseable {
   }
   
   public void write(String data) throws IOException {
-    if (stpProcess == null) throw new IllegalStateException("STP session has not been opened");
+    if (z3Process == null) throw new IllegalStateException("Z3 session has not been opened");
     writer.write(data);
     writer.newLine();
   }
@@ -85,14 +86,14 @@ public class STP implements AutoCloseable {
     } else if(result.equals("unsat")) {
       return false;
     } else {
-      throw new RuntimeException("STP encountered an error: " + result);
+      throw new RuntimeException("Z3 encountered an error: " + result);
     }
   }
   
   @Override
   public void close() {
-    if (stpProcess != null) {
-      stpProcess.destroyForcibly();
+    if (z3Process != null) {
+      z3Process.destroyForcibly();
     }
   }
   
