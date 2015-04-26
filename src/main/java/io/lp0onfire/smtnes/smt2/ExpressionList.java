@@ -12,10 +12,26 @@ public class ExpressionList extends SExpression {
   }
   
   public ExpressionList(SExpression... values) {
+    if (values == null) {
+      throw new NullPointerException("null subexpression in ExpressionList");
+    }
+    for (SExpression value : values) {
+      if (value == null) {
+        throw new NullPointerException("null subexpression in ExpressionList");
+      }
+    }
     exprs = new LinkedList<SExpression>(Arrays.asList(values));
   }
   
   public ExpressionList(List<SExpression> values) {
+    if (values == null) {
+      throw new NullPointerException("null subexpression in ExpressionList");
+    }
+    for (SExpression value : values) {
+      if (value == null) {
+        throw new NullPointerException("null subexpression in ExpressionList");
+      }
+    }
     exprs = new LinkedList<SExpression>(values);
   }
   
