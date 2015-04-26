@@ -88,14 +88,14 @@ public class CPUMemoryControllerFrontHalf implements CodeGenerator {
       // if the upper four bits of the address map to page N, set the chip select line for handler N to 1
       // and all other chip select lines to 0
       
-      String assertedChipSelect = pageHandlers.get(i).getHandlerPrefix() + "ChipSelect";
+      String assertedChipSelect = outputs.get(pageHandlers.get(i).getHandlerPrefix() + "ChipSelect").getName();
       for (Symbol chipSelect : chipSelectLines) {
         if (chipSelect.getName().equals(assertedChipSelect)) {
           exprs.add(new Assertion(new ImpliesExpression(new EqualsExpression(addressPage, pageNumber), 
               new EqualsExpression(chipSelect, new BinaryConstant("1")))));
         } else {
           exprs.add(new Assertion(new ImpliesExpression(new EqualsExpression(addressPage, pageNumber), 
-              new EqualsExpression(chipSelect, new BinaryConstant("1")))));
+              new EqualsExpression(chipSelect, new BinaryConstant("0")))));
         }
       }
       
