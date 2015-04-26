@@ -138,6 +138,39 @@ public class TestCPURAMHandler {
     
   }
   
+  class VerifyDataOut implements CodeGenerator {
+    private final String handlerPrefix;
+    private final BinaryConstant expectedValue;
+    
+    public VerifyDataOut(String handlerPrefix, BinaryConstant expectedValue) {
+      this.handlerPrefix = handlerPrefix;
+      this.expectedValue = expectedValue;
+    }
+    
+    @Override
+    public Set<String> getStateVariablesRead() {
+      return new HashSet<String>(Arrays.asList(new String[]{
+          handlerPrefix + "DataOut"
+      }));
+    }
+
+    @Override
+    public Set<String> getStateVariablesWritten() {
+      return new HashSet<>();
+    }
+
+    @Override
+    public List<SExpression> generateCode(Map<String, Symbol> inputs,
+        Map<String, Symbol> outputs) {
+      List<SExpression> exprs = new LinkedList<>();
+      
+      Symbol DataOut = inputs.get(handlerPrefix + "DataOut");
+      exprs.add(new Assertion(new EqualsExpression(DataOut, expectedValue)));
+      
+      return exprs;
+    }
+  }
+  
   @Test(timeout=5000)
   public void testSyntaxOK() throws IOException {
     List<SExpression> exprs = new LinkedList<>();
@@ -187,6 +220,82 @@ public class TestCPURAMHandler {
     exprs.addAll(reg.apply(verifier));
     exprs.addAll(reg.apply(ramHandler));
     exprs.addAll(reg.apply(verifier));
+    
+    try(Z3 z3 = new Z3()) {
+      z3.open();
+      for(SExpression expr : exprs) {
+        z3.write(expr.toString());
+      }
+      assertTrue(z3.checkSat());
+    }
+  }
+  
+  @Test(timeout=5000)
+  public void testReadMemory() throws IOException {
+    List<SExpression> exprs = new LinkedList<>();
+    StateVariableRegistry reg = new StateVariableRegistry();
+    
+    String addrLowBits = "00000000000";
+    
+    BinaryConstant targetAddr = new BinaryConstant("0000" + "0" + addrLowBits);
+    BinaryConstant ramAddr = new BinaryConstant(addrLowBits);
+    
+    PageHandler ramHandler = new CPURAMHandler();
+    CodeGenerator ramInit = new InitCPURAM();
+    CodeGenerator csDrive = new ChipSelectDriver(ramHandler.getHandlerPrefix(), new BinaryConstant("1"));
+    CodeGenerator busDrive = new BusDriver(
+        targetAddr, new BinaryConstant("0"), new BinaryConstant("11111111"));
+    CodeGenerator memoryVerifier = new VerifyRAMContents(ramAddr, ramInitialValue);
+    CodeGenerator dataVerifier = new VerifyDataOut(ramHandler.getHandlerPrefix(), ramInitialValue);
+    
+    // If CS is high and WE is low, the memory should not change
+    // and the value of DataOut should be the value in memory at that address.
+    
+    exprs.addAll(reg.apply(ramInit));
+    exprs.addAll(reg.apply(csDrive));
+    exprs.addAll(reg.apply(busDrive));
+    exprs.addAll(reg.apply(memoryVerifier));
+    exprs.addAll(reg.apply(ramHandler));
+    exprs.addAll(reg.apply(memoryVerifier));
+    exprs.addAll(reg.apply(dataVerifier));
+    
+    try(Z3 z3 = new Z3()) {
+      z3.open();
+      for(SExpression expr : exprs) {
+        z3.write(expr.toString());
+      }
+      assertTrue(z3.checkSat());
+    }
+  }
+  
+  @Test(timeout=5000)
+  public void testWriteMemory() throws IOException {
+    List<SExpression> exprs = new LinkedList<>();
+    StateVariableRegistry reg = new StateVariableRegistry();
+    
+    String addrLowBits = "00000000000";
+    
+    BinaryConstant targetAddr = new BinaryConstant("0000" + "0" + addrLowBits);
+    BinaryConstant ramAddr = new BinaryConstant(addrLowBits);
+    
+    BinaryConstant targetValue = new BinaryConstant("11111111");
+    
+    PageHandler ramHandler = new CPURAMHandler();
+    CodeGenerator ramInit = new InitCPURAM();
+    CodeGenerator csDrive = new ChipSelectDriver(ramHandler.getHandlerPrefix(), new BinaryConstant("1"));
+    CodeGenerator busDrive = new BusDriver(
+        targetAddr, new BinaryConstant("1"), targetValue);
+    CodeGenerator memoryVerifier1 = new VerifyRAMContents(ramAddr, ramInitialValue);
+    CodeGenerator memoryVerifier2 = new VerifyRAMContents(ramAddr, targetValue);
+    
+    // If CS is high and WE is 1, the memory should be updated to reflect the written value.
+    
+    exprs.addAll(reg.apply(ramInit));
+    exprs.addAll(reg.apply(csDrive));
+    exprs.addAll(reg.apply(busDrive));
+    exprs.addAll(reg.apply(memoryVerifier1));
+    exprs.addAll(reg.apply(ramHandler));
+    exprs.addAll(reg.apply(memoryVerifier2));
     
     try(Z3 z3 = new Z3()) {
       z3.open();
