@@ -98,8 +98,7 @@ public class CPUMemoryControllerFrontHalf implements CodeGenerator {
               new EqualsExpression(chipSelect, new BinaryConstant("0")))));
         }
       }
-      
-      // TODO address/WE/data forwarding
+
     }
     
     return exprs;
