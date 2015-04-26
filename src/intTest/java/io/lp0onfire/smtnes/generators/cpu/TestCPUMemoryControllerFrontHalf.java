@@ -36,7 +36,6 @@ public class TestCPUMemoryControllerFrontHalf {
     private final BinaryConstant driverDataOut;
     
     public BusDriver(BinaryConstant address, BinaryConstant writeEnable, BinaryConstant dataOut) {
-      // TODO check that these have the right width
       this.driverAddress = address;
       this.driverWriteEnable = writeEnable;
       this.driverDataOut = dataOut;
