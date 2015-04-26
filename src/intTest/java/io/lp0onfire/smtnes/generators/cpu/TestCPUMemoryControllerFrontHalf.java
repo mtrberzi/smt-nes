@@ -156,4 +156,56 @@ public class TestCPUMemoryControllerFrontHalf {
     }
   }
   
+  @Test(timeout=5000)
+  public void testRead_ChipSelectAsserted() throws IOException {
+    // check that addressing into page 7 ("0111") sets CS high for handler 7
+    List<SExpression> exprs = new LinkedList<>();
+    StateVariableRegistry reg = new StateVariableRegistry();
+    ArrayList<PageHandler> handlers = new ArrayList<>();
+    for (int i = 0; i < 16; ++i) {
+      handlers.add(i, new NullPageHandler());
+    }
+    PageHandler csHandler = new VerifyChipSelectHandler(new BinaryConstant("1"));
+    // override handler 7
+    handlers.set(7, csHandler);
+    CPUMemoryControllerFrontHalf memoryFront = new CPUMemoryControllerFrontHalf(handlers);
+    exprs.addAll(reg.apply(new BusDriver(new BinaryConstant("0111" + "000000000000"), new BinaryConstant("0"), new BinaryConstant("00000000"))));
+    exprs.addAll(reg.apply(memoryFront));
+    exprs.addAll(reg.apply(csHandler));
+    
+    try(STP stp = new STP()) {
+      stp.open();
+      for(SExpression expr : exprs) {
+        stp.write(expr.toString());
+      }
+      assertTrue(stp.checkSat());
+    }
+  }
+ 
+  @Test(timeout=5000)
+  public void testRead_ChipSelectNotAsserted() throws IOException {
+    // check that addressing into page 7 ("0111") sets CS low for handler 13
+    List<SExpression> exprs = new LinkedList<>();
+    StateVariableRegistry reg = new StateVariableRegistry();
+    ArrayList<PageHandler> handlers = new ArrayList<>();
+    for (int i = 0; i < 16; ++i) {
+      handlers.add(i, new NullPageHandler());
+    }
+    PageHandler csHandler = new VerifyChipSelectHandler(new BinaryConstant("0"));
+    // override handler 13
+    handlers.set(13, csHandler);
+    CPUMemoryControllerFrontHalf memoryFront = new CPUMemoryControllerFrontHalf(handlers);
+    exprs.addAll(reg.apply(new BusDriver(new BinaryConstant("0111" + "000000000000"), new BinaryConstant("0"), new BinaryConstant("00000000"))));
+    exprs.addAll(reg.apply(memoryFront));
+    exprs.addAll(reg.apply(csHandler));
+    
+    try(STP stp = new STP()) {
+      stp.open();
+      for(SExpression expr : exprs) {
+        stp.write(expr.toString());
+      }
+      assertTrue(stp.checkSat());
+    }
+  }
+  
 }
