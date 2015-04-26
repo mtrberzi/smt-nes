@@ -22,15 +22,15 @@ public class Z3 implements AutoCloseable {
     if (env.containsKey("PATH")) {
       String[] paths = env.get("PATH").split(":");
       for (String path : paths) {
-        File stp = new File(path + "/z3");
-        if (stp.exists() && !stp.isDirectory() && stp.canExecute()) {
+        File z3 = new File(path + "/z3");
+        if (z3.exists() && !z3.isDirectory() && z3.canExecute()) {
           pathToZ3 = path + "/z3";
           break;
         }
       }
     } else {
-      File stp = new File("./z3");
-      if (stp.exists() && !stp.isDirectory() && stp.canExecute()) {
+      File z3 = new File("./z3");
+      if (z3.exists() && !z3.isDirectory() && z3.canExecute()) {
         pathToZ3 = "./z3";
       }
     }
