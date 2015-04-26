@@ -36,7 +36,7 @@ public class CPURAMHandler extends PageHandler {
       Map<String, Symbol> outputs) {
     List<SExpression> exprs = new LinkedList<>();
     // declare CPURAM_DataOut
-    Symbol DataOut = outputs.get("CPU_DataOut");
+    Symbol DataOut = outputs.get(getHandlerPrefix() + "DataOut");
     exprs.add(new BitVectorDeclaration(DataOut, new Numeral("8")));
     // declare CPU_RAM (next)
     Symbol RAM_next = outputs.get("CPU_RAM");
@@ -66,13 +66,13 @@ public class CPURAMHandler extends PageHandler {
     
     exprs.add(new Assertion(new ImpliesExpression(
         new AndExpression(
-            new EqualsExpression(ChipSelect, new BinaryConstant("0")),
+            new EqualsExpression(ChipSelect, new BinaryConstant("1")),
             new EqualsExpression(WriteEnable, new BinaryConstant("0"))
             ), 
         new EqualsExpression(RAM_next, RAM_current))));
     exprs.add(new Assertion(new ImpliesExpression(
         new AndExpression(
-            new EqualsExpression(ChipSelect, new BinaryConstant("0")),
+            new EqualsExpression(ChipSelect, new BinaryConstant("1")),
             new EqualsExpression(WriteEnable, new BinaryConstant("0"))
             ), 
         new EqualsExpression(DataOut, new ArrayReadExpression(RAM_current, RAM_Address)))));
@@ -83,13 +83,13 @@ public class CPURAMHandler extends PageHandler {
     
     exprs.add(new Assertion(new ImpliesExpression(
         new AndExpression(
-            new EqualsExpression(ChipSelect, new BinaryConstant("0")),
+            new EqualsExpression(ChipSelect, new BinaryConstant("1")),
             new EqualsExpression(WriteEnable, new BinaryConstant("1"))
             ), 
         new EqualsExpression(RAM_next, new ArrayWriteExpression(RAM_current, RAM_Address, DataIn)))));
     exprs.add(new Assertion(new ImpliesExpression(
         new AndExpression(
-            new EqualsExpression(ChipSelect, new BinaryConstant("0")),
+            new EqualsExpression(ChipSelect, new BinaryConstant("1")),
             new EqualsExpression(WriteEnable, new BinaryConstant("1"))
             ), 
         new EqualsExpression(DataOut, DataIn))));
