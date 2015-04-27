@@ -60,9 +60,11 @@ public class INESLoader {
         PRGSizeRAM = 0x10;
         CHRSizeRAM = 0x20;
       }
-      // TODO load mapper
-      // TODO construct a ROM
-      return null;
+      // construct a ROM
+      ROMBuilder romBuilder = new ROMBuilder();
+      romBuilder.setPRG_ROM(PRG_ROM);
+      romBuilder.setMapperNumber(iNESMapper);
+      return romBuilder.build();
     }
   }
 
