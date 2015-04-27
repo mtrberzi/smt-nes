@@ -25,31 +25,6 @@ public class TestCPUMemoryControllerFrontHalf {
 
   // we need to set up CPU_{AddressBus, WriteEnable, DataOut}
   
-  class NullPageHandler extends PageHandler {
-
-    @Override
-    public String getHandlerPrefix() {
-      return "NullPage_";
-    }
-
-    @Override
-    public Set<String> getCustomStateVariablesRead() {
-      return new HashSet<String>();
-    }
-
-    @Override
-    public Set<String> getCustomStateVariablesWritten() {
-      return new HashSet<String>();
-    }
-
-    @Override
-    public List<SExpression> generateCode(Map<String, Symbol> inputs,
-        Map<String, Symbol> outputs) {
-      return new LinkedList<SExpression>();
-    }
-    
-  }
-  
   class VerifyChipSelectHandler extends PageHandler {
 
     private final BinaryConstant expectedCS;
