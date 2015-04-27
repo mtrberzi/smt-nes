@@ -2,10 +2,8 @@ package io.lp0onfire.smtnes.generators.cpu;
 
 import static org.junit.Assert.*;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -14,91 +12,18 @@ import java.util.Set;
 
 import org.junit.Test;
 
-import io.lp0onfire.smtnes.CodeGenerator;
 import io.lp0onfire.smtnes.PageHandler;
-import io.lp0onfire.smtnes.STP;
+import io.lp0onfire.smtnes.Z3;
 import io.lp0onfire.smtnes.StateVariableRegistry;
 import io.lp0onfire.smtnes.smt2.Assertion;
 import io.lp0onfire.smtnes.smt2.BinaryConstant;
-import io.lp0onfire.smtnes.smt2.BitVectorDeclaration;
 import io.lp0onfire.smtnes.smt2.EqualsExpression;
-import io.lp0onfire.smtnes.smt2.Numeral;
 import io.lp0onfire.smtnes.smt2.SExpression;
 import io.lp0onfire.smtnes.smt2.Symbol;
 
 public class TestCPUMemoryControllerFrontHalf {
 
   // we need to set up CPU_{AddressBus, WriteEnable, DataOut}
-  
-  class BusDriver implements CodeGenerator {
-
-    private final BinaryConstant driverAddress;
-    private final BinaryConstant driverWriteEnable;
-    private final BinaryConstant driverDataOut;
-    
-    public BusDriver(BinaryConstant address, BinaryConstant writeEnable, BinaryConstant dataOut) {
-      // TODO check that these have the right width
-      this.driverAddress = address;
-      this.driverWriteEnable = writeEnable;
-      this.driverDataOut = dataOut;
-    }
-    
-    @Override
-    public Set<String> getStateVariablesRead() {
-      return new HashSet<>();
-    }
-
-    @Override
-    public Set<String> getStateVariablesWritten() {
-      return new HashSet<>(Arrays.asList("CPU_AddressBus", "CPU_WriteEnable", "CPU_DataOut"));
-    }
-
-    @Override
-    public List<SExpression> generateCode(Map<String, Symbol> inputs,
-        Map<String, Symbol> outputs) {
-      List<SExpression> exprs = new LinkedList<>();
-      
-      Symbol AddressBus = outputs.get("CPU_AddressBus");
-      exprs.add(new BitVectorDeclaration(AddressBus, new Numeral("16")));
-      exprs.add(new Assertion(new EqualsExpression(AddressBus, driverAddress)));
-      
-      Symbol WriteEnable = outputs.get("CPU_WriteEnable");
-      exprs.add(new BitVectorDeclaration(WriteEnable, new Numeral("1")));
-      exprs.add(new Assertion(new EqualsExpression(WriteEnable, driverWriteEnable)));
-      
-      Symbol DataOut = outputs.get("CPU_DataOut");
-      exprs.add(new BitVectorDeclaration(DataOut, new Numeral("8")));
-      exprs.add(new Assertion(new EqualsExpression(DataOut, driverDataOut)));
-      
-      return exprs;
-    }
-    
-  }
-  
-  class NullPageHandler extends PageHandler {
-
-    @Override
-    public String getHandlerPrefix() {
-      return "NullPage_";
-    }
-
-    @Override
-    public Set<String> getCustomStateVariablesRead() {
-      return new HashSet<String>();
-    }
-
-    @Override
-    public Set<String> getCustomStateVariablesWritten() {
-      return new HashSet<String>();
-    }
-
-    @Override
-    public List<SExpression> generateCode(Map<String, Symbol> inputs,
-        Map<String, Symbol> outputs) {
-      return new LinkedList<SExpression>();
-    }
-    
-  }
   
   class VerifyChipSelectHandler extends PageHandler {
 
@@ -147,12 +72,12 @@ public class TestCPUMemoryControllerFrontHalf {
     exprs.addAll(reg.apply(new BusDriver(new BinaryConstant("0000000000000000"), new BinaryConstant("0"), new BinaryConstant("00000000"))));
     exprs.addAll(reg.apply(memoryFront));
     
-    try(STP stp = new STP()) {
-      stp.open();
+    try(Z3 z3 = new Z3()) {
+      z3.open();
       for(SExpression expr : exprs) {
-        stp.write(expr.toString());
+        z3.write(expr.toString());
       }
-      assertTrue(stp.checkSat());
+      assertTrue(z3.checkSat());
     }
   }
   
@@ -173,12 +98,12 @@ public class TestCPUMemoryControllerFrontHalf {
     exprs.addAll(reg.apply(memoryFront));
     exprs.addAll(reg.apply(csHandler));
     
-    try(STP stp = new STP()) {
-      stp.open();
+    try(Z3 z3 = new Z3()) {
+      z3.open();
       for(SExpression expr : exprs) {
-        stp.write(expr.toString());
+        z3.write(expr.toString());
       }
-      assertTrue(stp.checkSat());
+      assertTrue(z3.checkSat());
     }
   }
  
@@ -199,12 +124,12 @@ public class TestCPUMemoryControllerFrontHalf {
     exprs.addAll(reg.apply(memoryFront));
     exprs.addAll(reg.apply(csHandler));
     
-    try(STP stp = new STP()) {
-      stp.open();
+    try(Z3 z3 = new Z3()) {
+      z3.open();
       for(SExpression expr : exprs) {
-        stp.write(expr.toString());
+        z3.write(expr.toString());
       }
-      assertTrue(stp.checkSat());
+      assertTrue(z3.checkSat());
     }
   }
   

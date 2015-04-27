@@ -46,23 +46,16 @@ public class INESLoader {
         throw new IllegalArgumentException("Cannot load trained ROMs.");
       }
       
-      int PRGSizeROM = PRGsize * 4;
-      int CHRSizeROM = CHRsize * 8;
-      int PRGSizeRAM, CHRSizeRAM;
-      
       byte[] PRG_ROM = new byte[PRGsize * 0x4000];
       in.read(PRG_ROM, 0, PRGsize * 0x4000);
       byte[] CHR_ROM = new byte[CHRsize * 0x2000];
       in.read(CHR_ROM, 0, CHRsize * 0x2000);
-      if (iNESVersion == 2) {
-        // NES 2.0 stuff would go here
-      } else {
-        PRGSizeRAM = 0x10;
-        CHRSizeRAM = 0x20;
-      }
-      // TODO load mapper
-      // TODO construct a ROM
-      return null;
+
+      // construct a ROM
+      ROMBuilder romBuilder = new ROMBuilder();
+      romBuilder.setPRG_ROM(PRG_ROM);
+      romBuilder.setMapperNumber(iNESMapper);
+      return romBuilder.build();
     }
   }
 

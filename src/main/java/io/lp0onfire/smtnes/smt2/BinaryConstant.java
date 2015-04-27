@@ -1,5 +1,7 @@
 package io.lp0onfire.smtnes.smt2;
 
+import org.apache.commons.lang3.StringUtils;
+
 public class BinaryConstant extends SExpression {
 
   private final String bits;
@@ -23,6 +25,15 @@ public class BinaryConstant extends SExpression {
   }
   
   public BinaryConstant(String bits) {
+    verifyBits(bits);
+    this.bits = bits;
+  }
+  
+  public BinaryConstant(byte value) {
+    String bits = Integer.toBinaryString(value & 0xFF);
+    // zero-pad on the left
+    int zeroCount = 8 - bits.length();
+    bits = StringUtils.repeat('0', zeroCount) + bits;
     verifyBits(bits);
     this.bits = bits;
   }
