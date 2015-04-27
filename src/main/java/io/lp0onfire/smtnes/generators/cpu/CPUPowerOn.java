@@ -25,6 +25,9 @@ import io.lp0onfire.smtnes.smt2.*;
  * - WriteEnable: external memory write enable: 1=write, 0=read (width=1)
  * - DataOut: external memory data leaving CPU (width=8)
  * - DataIn: external memory data entering CPU (width=8)
+ * - ResetSequence: (width=3) when we are in the RESET state, counts down from 8 to 0
+ *   to perform a series of reads and eventually load PC.
+ * - State: (width=?) serializes CPUState
  */
 public class CPUPowerOn implements CodeGenerator {
   
@@ -38,7 +41,8 @@ public class CPUPowerOn implements CodeGenerator {
     return new HashSet<>(Arrays.asList("CPU_RAM", 
         "CPU_A", "CPU_X", "CPU_Y", "CPU_PC", "CPU_SP", "CPU_P", 
         "CPU_CalcAddr", "CPU_TmpAddr", "CPU_BranchOffset",
-        "CPU_AddressBus", "CPU_WriteEnable", "CPU_DataOut", "CPU_DataIn"));
+        "CPU_AddressBus", "CPU_WriteEnable", "CPU_DataOut", "CPU_DataIn",
+        "CPU_ResetSequence", "CPU_State"));
   }
 
   @Override
@@ -114,6 +118,15 @@ public class CPUPowerOn implements CodeGenerator {
     Symbol DataIn = outputs.get("CPU_DataIn");
     exprs.add(new BitVectorDeclaration(DataIn, new Numeral("8")));
     exprs.add(new Assertion(new EqualsExpression(DataIn, new BinaryConstant("00000000"))));
+    
+    // declare internal state variables
+    Symbol ResetSequence = outputs.get("CPU_ResetSequence");
+    exprs.add(new BitVectorDeclaration(ResetSequence, new Numeral("3")));
+    exprs.add(new Assertion(new EqualsExpression(ResetSequence, new BinaryConstant("000"))));
+    
+    Symbol State = outputs.get("CPU_State");
+    exprs.add(new BitVectorDeclaration(State, new Numeral(Integer.toString(CPUState.getStateWidth()))));
+    exprs.add(new Assertion(new EqualsExpression(State, CPUState.Resetting.toBinaryConstant())));
     
     return exprs;
   }

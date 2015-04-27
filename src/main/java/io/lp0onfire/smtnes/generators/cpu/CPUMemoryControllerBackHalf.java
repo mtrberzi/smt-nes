@@ -64,7 +64,7 @@ public class CPUMemoryControllerBackHalf implements CodeGenerator {
     for (String handlerPrefix : uniquePageHandlerPrefixes) {
       SExpression handlerChipSelect = inputs.get(handlerPrefix + "ChipSelect");
       SExpression handlerDataOut = inputs.get(handlerPrefix + "DataOut");
-      exprs.add(new Assertion(new ImpliesExpression(
+      exprs.add(new Assertion(new Implication(
           new EqualsExpression(handlerChipSelect, new BinaryConstant("1")), 
           new EqualsExpression(DataIn, handlerDataOut))));
     }
