@@ -69,40 +69,6 @@ public class TestCPURAMHandler {
     
   }
   
-  class ChipSelectDriver implements CodeGenerator {
-
-    private final String csName;
-    private final BinaryConstant csValue;
-    
-    public ChipSelectDriver(String chipSelectPrefix, BinaryConstant chipSelectValue) {
-      csName = chipSelectPrefix + "ChipSelect";
-      csValue = chipSelectValue;
-    }
-    
-    @Override
-    public Set<String> getStateVariablesRead() {
-      return new HashSet<>();
-    }
-
-    @Override
-    public Set<String> getStateVariablesWritten() {
-      return new HashSet<String>(Arrays.asList(new String[]{
-          csName
-      }));
-    }
-
-    @Override
-    public List<SExpression> generateCode(Map<String, Symbol> inputs,
-        Map<String, Symbol> outputs) {
-      List<SExpression> exprs = new LinkedList<>();
-      Symbol CS = outputs.get(csName);
-      exprs.add(new BitVectorDeclaration(CS, new Numeral("1")));
-      exprs.add(new Assertion(new EqualsExpression(CS, csValue)));
-      return exprs;
-    }
-    
-  }
-  
   class VerifyRAMContents implements CodeGenerator {
 
     private final BinaryConstant readAddr;
@@ -136,39 +102,6 @@ public class TestCPURAMHandler {
       return exprs;
     }
     
-  }
-  
-  class VerifyDataOut implements CodeGenerator {
-    private final String handlerPrefix;
-    private final BinaryConstant expectedValue;
-    
-    public VerifyDataOut(String handlerPrefix, BinaryConstant expectedValue) {
-      this.handlerPrefix = handlerPrefix;
-      this.expectedValue = expectedValue;
-    }
-    
-    @Override
-    public Set<String> getStateVariablesRead() {
-      return new HashSet<String>(Arrays.asList(new String[]{
-          handlerPrefix + "DataOut"
-      }));
-    }
-
-    @Override
-    public Set<String> getStateVariablesWritten() {
-      return new HashSet<>();
-    }
-
-    @Override
-    public List<SExpression> generateCode(Map<String, Symbol> inputs,
-        Map<String, Symbol> outputs) {
-      List<SExpression> exprs = new LinkedList<>();
-      
-      Symbol DataOut = inputs.get(handlerPrefix + "DataOut");
-      exprs.add(new Assertion(new EqualsExpression(DataOut, expectedValue)));
-      
-      return exprs;
-    }
   }
   
   @Test(timeout=5000)
@@ -246,7 +179,7 @@ public class TestCPURAMHandler {
     CodeGenerator busDrive = new BusDriver(
         targetAddr, new BinaryConstant("0"), new BinaryConstant("11111111"));
     CodeGenerator memoryVerifier = new VerifyRAMContents(ramAddr, ramInitialValue);
-    CodeGenerator dataVerifier = new VerifyDataOut(ramHandler.getHandlerPrefix(), ramInitialValue);
+    CodeGenerator dataVerifier = new VerifyPageHandlerDataOut(ramHandler.getHandlerPrefix(), ramInitialValue);
     
     // If CS is high and WE is low, the memory should not change
     // and the value of DataOut should be the value in memory at that address.
