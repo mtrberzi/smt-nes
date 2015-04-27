@@ -17,7 +17,7 @@ import io.lp0onfire.smtnes.smt2.*;
  * All CPU variables start with CPU_.
  * The CPU state variables are:
  * - RAM, an array of 2048 bytes (addr=11,data=8) initially all zeroes
- * - A, X, Y, SP: processor registers (width=8)
+ * - A, X, Y, SP, P: processor registers (width=8)
  * - PC: program counter (width=16)
  * - CalcAddr, TmpAddr: addressing mode calculation temporaries (width=16)
  * - BranchOffset: branch calculation temporary (width=8)
