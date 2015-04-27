@@ -21,7 +21,6 @@ import io.lp0onfire.smtnes.smt2.ArrayDeclaration;
 import io.lp0onfire.smtnes.smt2.ArrayReadExpression;
 import io.lp0onfire.smtnes.smt2.Assertion;
 import io.lp0onfire.smtnes.smt2.BinaryConstant;
-import io.lp0onfire.smtnes.smt2.BitVectorDeclaration;
 import io.lp0onfire.smtnes.smt2.EqualsExpression;
 import io.lp0onfire.smtnes.smt2.Numeral;
 import io.lp0onfire.smtnes.smt2.SExpression;
