@@ -53,6 +53,10 @@ public class CPURAMHandler extends PageHandler {
     // extract 11-bit address
     SExpression RAM_Address = new BitVectorExtractExpression(Address, new Numeral("10"), new Numeral("0"));
     
+    // TODO this is one of the few places where array extensionality is used;
+    // if it is efficient to eliminate (or at least to provide the option to generate it differently),
+    // then we can use this in STP and other solvers that don't implement the Ex in ArraysEx
+    
     // if ChipSelect = 0, don't do anything:
     // RAM_next <= RAM_current and DataOut <= 0x00
     exprs.add(new Assertion(new ImpliesExpression(new EqualsExpression(ChipSelect, new BinaryConstant("0")), 
