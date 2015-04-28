@@ -254,6 +254,7 @@ public class CPUCycle implements CodeGenerator {
                 new EqualsExpression(ResetSequence_next, new BinaryConstant("111"))
         ))));
     // phase 7: set PC_high = DataIn, set up instruction fetch
+    // note that since we simulate an instruction fetch here, we also increment PC
     SExpression nextProgramCounter = new BitVectorConcatExpression(
         DataIn_current,
         new BitVectorExtractExpression(PC_current, new Numeral("7"), new Numeral("0")));
@@ -262,7 +263,7 @@ public class CPUCycle implements CodeGenerator {
             new EqualsExpression(ResetSequence_current, new BinaryConstant("111"))),
             new AndExpression(
                 preserveA(), preserveX(), preserveY(), preserveSP(), preserveP(),
-                new EqualsExpression(PC_next, nextProgramCounter),
+                new EqualsExpression(PC_next, new BitVectorAddExpression(nextProgramCounter, new BinaryConstant("0000000000000001"))),
                 new EqualsExpression(State_next, CPUState.InstructionFetch.toBinaryConstant()),
                 new EqualsExpression(AddressBus_next, nextProgramCounter),
                 new EqualsExpression(WriteEnable_next, new BinaryConstant("0")),
