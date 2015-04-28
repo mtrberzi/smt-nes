@@ -139,6 +139,7 @@ public class TestCPUResetSequence {
   public void testProgramCounterAfterReset() throws IOException {
     // test that after the reset cycle, PC[15 downto 8] = $FFFD
     // and PC[7 downto 0] = $FFFC
+    // plus one since we simulate an instruction fetch
     List<SExpression> exprs = new LinkedList<>();
     StateVariableRegistry reg = new StateVariableRegistry();
     
@@ -188,7 +189,7 @@ public class TestCPUResetSequence {
           if (i == 2045) { // 0x7fd
             value = new BinaryConstant("11110000");
           } else if (i == 2044) { // 0x7fc
-            value = new BinaryConstant("00001111");
+            value = new BinaryConstant("00001110");
           } else {
             value = ramInitialValue;
           }
