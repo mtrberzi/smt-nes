@@ -64,28 +64,28 @@ public class CPUCycle implements CodeGenerator {
   private Symbol State_next;
 
   // helpers for subexpressions
-  private Assertion preserveA() {
-    return new Assertion(new EqualsExpression(A_current, A_next));
+  private EqualsExpression preserveA() {
+    return new EqualsExpression(A_current, A_next);
   }
   
-  private Assertion preserveX() {
-    return new Assertion(new EqualsExpression(X_current, X_next));
+  private EqualsExpression preserveX() {
+    return new EqualsExpression(X_current, X_next);
   }
   
-  private Assertion preserveY() {
-    return new Assertion(new EqualsExpression(Y_current, Y_next));
+  private EqualsExpression preserveY() {
+    return new EqualsExpression(Y_current, Y_next);
   }
   
-  private Assertion preserveSP() {
-    return new Assertion(new EqualsExpression(SP_current, SP_next));
+  private EqualsExpression preserveSP() {
+    return new EqualsExpression(SP_current, SP_next);
   }
   
-  private Assertion preserveP() {
-    return new Assertion(new EqualsExpression(P_current, P_next));
+  private EqualsExpression preserveP() {
+    return new EqualsExpression(P_current, P_next);
   }
   
-  private Assertion preservePC() {
-    return new Assertion(new EqualsExpression(PC_current, PC_next));
+  private EqualsExpression preservePC() {
+    return new EqualsExpression(PC_current, PC_next);
   }
   
   @Override
@@ -259,7 +259,7 @@ public class CPUCycle implements CodeGenerator {
         new BitVectorExtractExpression(PC_current, new Numeral("7"), new Numeral("0")));
     exprs.add(new Assertion(new Implication(
         new AndExpression(new EqualsExpression(State_current, CPUState.Resetting.toBinaryConstant()),
-            new EqualsExpression(ResetSequence_current, new BinaryConstant("110"))),
+            new EqualsExpression(ResetSequence_current, new BinaryConstant("111"))),
             new AndExpression(
                 preserveA(), preserveX(), preserveY(), preserveSP(), preserveP(),
                 new EqualsExpression(PC_next, nextProgramCounter),
