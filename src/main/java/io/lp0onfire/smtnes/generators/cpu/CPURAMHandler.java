@@ -59,22 +59,22 @@ public class CPURAMHandler extends PageHandler {
     
     // if ChipSelect = 0, don't do anything:
     // RAM_next <= RAM_current and DataOut <= 0x00
-    exprs.add(new Assertion(new ImpliesExpression(new EqualsExpression(ChipSelect, new BinaryConstant("0")), 
+    exprs.add(new Assertion(new Implication(new EqualsExpression(ChipSelect, new BinaryConstant("0")), 
         new EqualsExpression(RAM_next, RAM_current))));
-    exprs.add(new Assertion(new ImpliesExpression(new EqualsExpression(ChipSelect, new BinaryConstant("0")), 
+    exprs.add(new Assertion(new Implication(new EqualsExpression(ChipSelect, new BinaryConstant("0")), 
         new EqualsExpression(DataOut, new BinaryConstant("00000000")))));
     
     // if ChipSelect = 1 and WriteEnable = 0, this is a read:
     // RAM_next <= RAM_current and DataOut <= RAM_current[Address & 0x07FF]
     // (the lowest 11 bits of Address)
     
-    exprs.add(new Assertion(new ImpliesExpression(
+    exprs.add(new Assertion(new Implication(
         new AndExpression(
             new EqualsExpression(ChipSelect, new BinaryConstant("1")),
             new EqualsExpression(WriteEnable, new BinaryConstant("0"))
             ), 
         new EqualsExpression(RAM_next, RAM_current))));
-    exprs.add(new Assertion(new ImpliesExpression(
+    exprs.add(new Assertion(new Implication(
         new AndExpression(
             new EqualsExpression(ChipSelect, new BinaryConstant("1")),
             new EqualsExpression(WriteEnable, new BinaryConstant("0"))
@@ -85,13 +85,13 @@ public class CPURAMHandler extends PageHandler {
     // RAM_next <= store(RAM_current, Address & 0x07FF, DataIn) and
     // (??? this is probably correct to simulate a tri-state shared data bus) DataOut <= DataIn
     
-    exprs.add(new Assertion(new ImpliesExpression(
+    exprs.add(new Assertion(new Implication(
         new AndExpression(
             new EqualsExpression(ChipSelect, new BinaryConstant("1")),
             new EqualsExpression(WriteEnable, new BinaryConstant("1"))
             ), 
         new EqualsExpression(RAM_next, new ArrayWriteExpression(RAM_current, RAM_Address, DataIn)))));
-    exprs.add(new Assertion(new ImpliesExpression(
+    exprs.add(new Assertion(new Implication(
         new AndExpression(
             new EqualsExpression(ChipSelect, new BinaryConstant("1")),
             new EqualsExpression(WriteEnable, new BinaryConstant("1"))

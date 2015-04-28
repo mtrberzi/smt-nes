@@ -91,10 +91,10 @@ public class CPUMemoryControllerFrontHalf implements CodeGenerator {
       String assertedChipSelect = outputs.get(pageHandlers.get(i).getHandlerPrefix() + "ChipSelect").getName();
       for (Symbol chipSelect : chipSelectLines) {
         if (chipSelect.getName().equals(assertedChipSelect)) {
-          exprs.add(new Assertion(new ImpliesExpression(new EqualsExpression(addressPage, pageNumber), 
+          exprs.add(new Assertion(new Implication(new EqualsExpression(addressPage, pageNumber), 
               new EqualsExpression(chipSelect, new BinaryConstant("1")))));
         } else {
-          exprs.add(new Assertion(new ImpliesExpression(new EqualsExpression(addressPage, pageNumber), 
+          exprs.add(new Assertion(new Implication(new EqualsExpression(addressPage, pageNumber), 
               new EqualsExpression(chipSelect, new BinaryConstant("0")))));
         }
       }
