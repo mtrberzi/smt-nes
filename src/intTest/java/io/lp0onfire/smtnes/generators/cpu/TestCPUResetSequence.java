@@ -15,6 +15,7 @@ import io.lp0onfire.smtnes.StateVariableRegistry;
 import io.lp0onfire.smtnes.Z3;
 import io.lp0onfire.smtnes.smt2.*;
 
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -123,6 +124,120 @@ public class TestCPUResetSequence {
       exprs.addAll(reg.apply(ramPageHandler));
       exprs.addAll(reg.apply(memoryControllerBack));
     }
+    
+    try(Z3 z3 = new Z3()) {
+      z3.open();
+      for(SExpression expr : exprs) {
+        z3.write(expr.toString());
+      }
+      assertTrue(z3.checkSat());
+    }
+    
+  }
+  
+  @Test(timeout=10000)
+  public void testProgramCounterAfterReset() throws IOException {
+    // test that after the reset cycle, PC[15 downto 8] = $FFFD
+    // and PC[7 downto 0] = $FFFC
+    List<SExpression> exprs = new LinkedList<>();
+    StateVariableRegistry reg = new StateVariableRegistry();
+    
+    // we'll cheat and say that absolutely everything maps into RAM
+    
+    ArrayList<PageHandler> pageHandlers = new ArrayList<>();
+    PageHandler ramPageHandler = new CPURAMHandler();
+    for (int i = 0; i < 16; ++i) {
+      pageHandlers.add(i, ramPageHandler);
+    }
+    
+    CodeGenerator memoryControllerFront = new CPUMemoryControllerFrontHalf(pageHandlers);
+    CodeGenerator memoryControllerBack = new CPUMemoryControllerBackHalf(pageHandlers);
+    
+    // initialize CPU once
+    CodeGenerator cpuPowerOn = new CPUPowerOn();
+    exprs.addAll(reg.apply(cpuPowerOn));
+    
+    // initialize RAM
+    CodeGenerator initRAM = new CodeGenerator() {
+      private BinaryConstant ramInitialValue = new BinaryConstant("00000000");
+      @Override
+      public Set<String> getStateVariablesRead() {
+        return new HashSet<>();
+      }
+
+      @Override
+      public Set<String> getStateVariablesWritten() {
+        return new HashSet<String>(Arrays.asList(new String[]{
+            "CPU_RAM"
+        }));
+      }
+
+      @Override
+      public List<SExpression> generateCode(Map<String, Symbol> inputs,
+          Map<String, Symbol> outputs) {
+        List<SExpression> exprs = new LinkedList<>();
+        // declare RAM array and initialize to a test pattern
+        Symbol RAM = outputs.get("CPU_RAM");
+        exprs.add(new ArrayDeclaration(RAM, new Numeral("11"), new Numeral("8")));
+        for (int i = 0; i < 2048; ++i) {
+          String bits = Integer.toBinaryString(i);
+          // zero-pad on the left
+          int zeroCount = 11 - bits.length();
+          BinaryConstant index = new BinaryConstant(StringUtils.repeat('0', zeroCount) + bits);
+          BinaryConstant value;
+          if (i == 2045) { // 0x7fd
+            value = new BinaryConstant("11110000");
+          } else if (i == 2044) { // 0x7fc
+            value = new BinaryConstant("00001111");
+          } else {
+            value = ramInitialValue;
+          }
+          exprs.add(new Assertion(new EqualsExpression(
+              new ArrayReadExpression(RAM, index), value)));
+        }
+        return exprs;
+      }
+    };
+    exprs.addAll(reg.apply(initRAM));
+    
+    CodeGenerator cpuCycle = new CPUCycle();
+    
+    for (int i = 0; i < 8; ++i) {
+      exprs.addAll(reg.apply(cpuCycle));
+      exprs.addAll(reg.apply(memoryControllerFront));
+      exprs.addAll(reg.apply(ramPageHandler));
+      exprs.addAll(reg.apply(memoryControllerBack));
+    }
+    
+    // check PC
+    
+    CodeGenerator verifyPC = new CodeGenerator() {
+
+      @Override
+      public Set<String> getStateVariablesRead() {
+        return new HashSet<String>(Arrays.asList(new String[]{
+            "CPU_PC"
+        }));
+      }
+
+      @Override
+      public Set<String> getStateVariablesWritten() {
+        return new HashSet<>();
+      }
+
+      @Override
+      public List<SExpression> generateCode(Map<String, Symbol> inputs,
+          Map<String, Symbol> outputs) {
+        List<SExpression> exprs = new LinkedList<>();
+        
+        Symbol PC = inputs.get("CPU_PC");
+        exprs.add(new Assertion(new EqualsExpression(PC, new BinaryConstant("1111000000001111"))));
+        
+        return exprs;
+      }
+      
+    };
+    exprs.addAll(reg.apply(verifyPC));
     
     try(Z3 z3 = new Z3()) {
       z3.open();
