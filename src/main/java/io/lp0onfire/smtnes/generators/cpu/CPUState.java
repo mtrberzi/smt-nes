@@ -1,5 +1,7 @@
 package io.lp0onfire.smtnes.generators.cpu;
 
+import org.apache.commons.lang3.StringUtils;
+
 import io.lp0onfire.smtnes.smt2.BinaryConstant;
 
 public enum CPUState {
@@ -14,8 +16,10 @@ public enum CPUState {
   }
   
   public BinaryConstant toBinaryConstant() {
-    // TODO
-     throw new UnsupportedOperationException("not yet implemented");
+    String bits = Integer.toBinaryString(getIndex());
+    // zero-pad on the left
+    int zeroCount = getStateWidth() - bits.length();
+    return new BinaryConstant(StringUtils.repeat('0', zeroCount) + bits);
   }
   
   private static Integer maxIndex = null;
