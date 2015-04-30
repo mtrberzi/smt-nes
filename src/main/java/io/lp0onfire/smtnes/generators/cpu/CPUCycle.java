@@ -88,6 +88,19 @@ public class CPUCycle implements CodeGenerator {
     return new EqualsExpression(PC_current, PC_next);
   }
   
+  // Set up a read from the address pointed to by the current program counter.
+  private AndExpression fetchPC() {
+    return new AndExpression(
+        new EqualsExpression(AddressBus_next, PC_current),
+        new EqualsExpression(WriteEnable_next, new BinaryConstant("0")),
+        new EqualsExpression(DataOut_next, new BinaryConstant("00000000"))
+        );
+  }
+  
+  private EqualsExpression incrementPC() {
+    return new EqualsExpression(PC_next, new BitVectorAddExpression(PC_current, new BinaryConstant("0000000000000001")));
+  }
+  
   @Override
   public List<SExpression> generateCode(Map<String, Symbol> inputs,
       Map<String, Symbol> outputs) {
@@ -153,6 +166,7 @@ public class CPUCycle implements CodeGenerator {
     exprs.add(new BitVectorDeclaration(State_next, new Numeral(Integer.toString(CPUState.getStateWidth()))));
     
     exprs.addAll(handleReset());
+    exprs.addAll(instruction_LDA());
     
     return exprs;
   }
@@ -270,6 +284,66 @@ public class CPUCycle implements CodeGenerator {
                 new EqualsExpression(DataOut_next, new BinaryConstant("00000000")),
                 new EqualsExpression(ResetSequence_next, new BinaryConstant("000"))
         ))));
+    
+    return exprs;
+  }
+  
+  private List<SExpression> instruction_LDA() {
+    List<SExpression> exprs = new LinkedList<>();
+    
+    // opcodes that use LDA:
+    // A1 (INX), B1 (INY), A9 (IMM), B9 (ABY), A5 (ZPG), B5 (ZPX), AD (ABS), BD (ABX)
+    
+    // operation of LDA:
+    // * A = MemGet(CalcAddr)
+    // * P[Z] = (A == 0)
+    // * P[N] = (A[7] == 1)
+    
+    // opcode A9: LDA immediate
+    // cycle 0: read [PC], increment PC
+    // cycle 1: set A, set P, instruction fetch
+    exprs.add(new Assertion(new Implication(
+        new AndExpression(new EqualsExpression(State_current, CPUState.InstructionFetch.toBinaryConstant()),
+            new EqualsExpression(DataIn_current, new HexConstant("A9"))), 
+        new AndExpression(
+            preserveA(), preserveX(), preserveY(), preserveSP(), preserveP(),
+            fetchPC(), incrementPC(),
+            new EqualsExpression(State_next, CPUState.LDA_IMM_Cycle1.toBinaryConstant())
+            ))));
+    exprs.add(new Assertion(new Implication(
+        new EqualsExpression(State_current, CPUState.LDA_IMM_Cycle1.toBinaryConstant()),
+        new AndExpression(
+            new EqualsExpression(A_next, DataIn_current),
+            preserveX(), preserveY(), preserveSP(), 
+            new EqualsExpression(P_next, new BitVectorConcatExpression(
+                new BitVectorConcatExpression(
+                // 7 P[Z]
+                    new ConditionalExpression(
+                        new EqualsExpression(DataIn_current, new BinaryConstant("00000000")), 
+                        new BinaryConstant("1"), new BinaryConstant("0")),
+                // 6 downto 2
+                    new BitVectorExtractExpression(P_current, new Numeral("6"), new Numeral("2"))
+                    ),
+                new BitVectorConcatExpression(
+                // 1 P[N]
+                    new ConditionalExpression(
+                        new EqualsExpression(new BitVectorExtractExpression(DataIn_current, new Numeral("7"), new Numeral("7")), 
+                            new BinaryConstant("1")), 
+                        new BinaryConstant("1"), new BinaryConstant("0")),
+                // 0
+                    new BitVectorExtractExpression(P_current, new Numeral("0"), new Numeral("0"))
+                    )
+                )),
+            fetchPC(), incrementPC(),
+            new EqualsExpression(State_next, CPUState.InstructionFetch.toBinaryConstant())
+            ))));
+    // opcode A5: LDA zeropage
+    // opcode B5: LDA zeropage,x
+    // opcode AD: LDA absolute
+    // opcode BD: LDA absolute,x
+    // opcode B9: LDA absolute,y
+    // opcode A1: LDA indirect,x
+    // opcode B1: LDA indirect,y
     
     return exprs;
   }

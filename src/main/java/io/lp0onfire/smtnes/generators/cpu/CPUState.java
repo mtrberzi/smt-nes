@@ -8,6 +8,7 @@ public enum CPUState {
 
   Resetting(0), // instead look at ResetSequence
   InstructionFetch(1), // read instruction from DataIn
+  LDA_IMM_Cycle1(2),
   ;
   
   private final int index;
