@@ -354,7 +354,7 @@ public class CPUCycle implements CodeGenerator {
 							      new EqualsExpression(AddressBus_next, new BitVectorConcatExpression(new BinaryConstant("00000000"), DataIn_current)),
 							      new EqualsExpression(WriteEnable_next, new BinaryConstant("0")),
 							      new EqualsExpression(DataOut_next, new BinaryConstant("00000000")),
-							      new EqualsExpression(State_next, CPUState.LDA_ZPG_Cycle2.toBinaryConstant()))));
+							      new EqualsExpression(State_next, CPUState.LDA_ZPG_Cycle2.toBinaryConstant())))));
     exprs.add(new Assertion(new Implication(
         new EqualsExpression(State_current, CPUState.LDA_ZPG_Cycle2.toBinaryConstant()),
         new AndExpression(
