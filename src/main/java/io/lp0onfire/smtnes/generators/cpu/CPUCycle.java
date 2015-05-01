@@ -385,6 +385,63 @@ public class CPUCycle implements CodeGenerator {
 
     // opcode B5: LDA zeropage,x
     // opcode AD: LDA absolute
+    // cycle 0: read [PC], increment PC
+    // cycle 1: CalcAddr[7:0] = DataIn, read [PC], increment PC
+    // cycle 2: CalcAddr[15:8] = DataIn, read [CalcAddr]
+    // cycle 3: set A, set P, instruction fetch
+    exprs.add(new Assertion(new Implication(
+        new AndExpression(new EqualsExpression(State_current, CPUState.InstructionFetch.toBinaryConstant()),
+            new EqualsExpression(DataIn_current, new HexConstant("AD"))), 
+        new AndExpression(
+            preserveA(), preserveX(), preserveY(), preserveSP(), preserveP(),
+            fetchPC(), incrementPC(),
+            new EqualsExpression(State_next, CPUState.LDA_ABS_Cycle1.toBinaryConstant())
+            ))));
+    exprs.add(new Assertion(new Implication(
+        new EqualsExpression(State_current, CPUState.LDA_ABS_Cycle1.toBinaryConstant()), 
+        new AndExpression(
+            preserveA(), preserveX(), preserveY(), preserveSP(), preserveP(),
+            new EqualsExpression(CalcAddr_next, new BitVectorConcatExpression(new BinaryConstant("00000000"), DataIn_current)),
+            fetchPC(), incrementPC(),
+            new EqualsExpression(State_next, CPUState.LDA_ABS_Cycle2.toBinaryConstant())
+            ))));
+    exprs.add(new Assertion(new Implication(
+        new EqualsExpression(State_current, CPUState.LDA_ABS_Cycle2.toBinaryConstant()),
+        new AndExpression(
+            preserveA(), preserveX(), preserveY(), preserveSP(), preserveP(),
+            new EqualsExpression(AddressBus_next, new BitVectorConcatExpression(DataIn_current, new BitVectorExtractExpression(
+                CalcAddr_current, new Numeral("7"), new Numeral("0")))),
+            new EqualsExpression(WriteEnable_next, new BinaryConstant("0")),
+            new EqualsExpression(DataOut_next, new BinaryConstant("00000000")),
+            new EqualsExpression(State_next, CPUState.LDA_ABS_Cycle3.toBinaryConstant())
+        ))));
+    exprs.add(new Assertion(new Implication(
+        new EqualsExpression(State_current, CPUState.LDA_ABS_Cycle3.toBinaryConstant()),
+        new AndExpression(
+            new EqualsExpression(A_next, DataIn_current),
+            preserveX(), preserveY(), preserveSP(), 
+            new EqualsExpression(P_next, new BitVectorConcatExpression(
+                new BitVectorConcatExpression(
+                // 7 P[Z]
+                    new ConditionalExpression(
+                        new EqualsExpression(DataIn_current, new BinaryConstant("00000000")), 
+                        new BinaryConstant("1"), new BinaryConstant("0")),
+                // 6 downto 2
+                    new BitVectorExtractExpression(P_current, new Numeral("6"), new Numeral("2"))
+                    ),
+                new BitVectorConcatExpression(
+                // 1 P[N]
+                    new ConditionalExpression(
+                        new EqualsExpression(new BitVectorExtractExpression(DataIn_current, new Numeral("7"), new Numeral("7")), 
+                            new BinaryConstant("1")), 
+                        new BinaryConstant("1"), new BinaryConstant("0")),
+                // 0
+                    new BitVectorExtractExpression(P_current, new Numeral("0"), new Numeral("0"))
+                    )
+                )),
+            fetchPC(), incrementPC(),
+            new EqualsExpression(State_next, CPUState.InstructionFetch.toBinaryConstant())
+            ))));
     // opcode BD: LDA absolute,x
     // opcode B9: LDA absolute,y
     // opcode A1: LDA indirect,x

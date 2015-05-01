@@ -10,7 +10,10 @@ public enum CPUState {
   InstructionFetch(1), // read instruction from DataIn
   LDA_IMM_Cycle1(2),
   LDA_ZPG_Cycle1(3),
-  LDA_ZPG_Cycle2(4)
+  LDA_ZPG_Cycle2(4),
+  LDA_ABS_Cycle1(5),
+  LDA_ABS_Cycle2(6),
+  LDA_ABS_Cycle3(7),
   ;
   
   private final int index;
