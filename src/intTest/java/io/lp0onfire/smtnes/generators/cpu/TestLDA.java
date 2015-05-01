@@ -276,6 +276,33 @@ public class TestLDA {
     CodeGenerator initRAM = burner.getInitializer();
     exprs.addAll(reg.apply(initRAM));
     
+    // set X = $07
+    exprs.addAll(reg.apply(new CodeGenerator(){
+      @Override
+      public Set<String> getStateVariablesRead() {
+        return new HashSet<>();
+      }
+
+      @Override
+      public Set<String> getStateVariablesWritten() {
+        return new HashSet<String>(Arrays.asList(new String[]{
+            "CPU_X"
+        }));
+      }
+
+      @Override
+      public List<SExpression> generateCode(Map<String, Symbol> inputs,
+          Map<String, Symbol> outputs) {
+        List<SExpression> exprs = new LinkedList<>();
+        
+        Symbol X = outputs.get("CPU_X");
+        exprs.add(new BitVectorDeclaration(X, new Numeral("8")));
+        exprs.add(new Assertion(new EqualsExpression(X, new HexConstant("07"))));
+        
+        return exprs;
+      }
+    }));
+    
     CodeGenerator cpuCycle = new CPUCycle();
     CodeGenerator verifyStateInstructionFetch = new VerifyCPUState(CPUState.InstructionFetch);
     
