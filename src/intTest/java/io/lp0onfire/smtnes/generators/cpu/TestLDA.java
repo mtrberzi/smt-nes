@@ -85,36 +85,6 @@ public class TestLDA {
       exprs.addAll(reg.apply(memoryControllerBack));
     }
     
-    // check that we are in state InstructionFetch
-    exprs.addAll(reg.apply(verifyStateInstructionFetch));
-    // check that the program counter is pointing to $0003
-    CodeGenerator verifyPC = new CodeGenerator() {
-
-      @Override
-      public Set<String> getStateVariablesRead() {
-        return new HashSet<String>(Arrays.asList(new String[]{
-            "CPU_PC"
-        }));
-      }
-
-      @Override
-      public Set<String> getStateVariablesWritten() {
-        return new HashSet<>();
-      }
-
-      @Override
-      public List<SExpression> generateCode(Map<String, Symbol> inputs,
-          Map<String, Symbol> outputs) {
-        List<SExpression> exprs = new LinkedList<>();
-        
-        Symbol PC = inputs.get("CPU_PC");
-        exprs.add(new Assertion(new EqualsExpression(PC, new BinaryConstant("0000000000000011"))));
-        
-        return exprs;
-      }
-      
-    };
-    exprs.addAll(reg.apply(verifyPC));
     // check that A = $5A
     CodeGenerator verifyA = new CodeGenerator() {
 
@@ -222,36 +192,6 @@ public class TestLDA {
       exprs.addAll(reg.apply(memoryControllerBack));
     }
     
-    // check that we are in state InstructionFetch
-    exprs.addAll(reg.apply(verifyStateInstructionFetch));
-    // check that the program counter is pointing to $0003
-    CodeGenerator verifyPC = new CodeGenerator() {
-
-      @Override
-      public Set<String> getStateVariablesRead() {
-        return new HashSet<String>(Arrays.asList(new String[]{
-            "CPU_PC"
-        }));
-      }
-
-      @Override
-      public Set<String> getStateVariablesWritten() {
-        return new HashSet<>();
-      }
-
-      @Override
-      public List<SExpression> generateCode(Map<String, Symbol> inputs,
-          Map<String, Symbol> outputs) {
-        List<SExpression> exprs = new LinkedList<>();
-        
-        Symbol PC = inputs.get("CPU_PC");
-        exprs.add(new Assertion(new EqualsExpression(PC, new BinaryConstant("0000000000000011"))));
-        
-        return exprs;
-      }
-      
-    };
-    exprs.addAll(reg.apply(verifyPC));
     // check that A = $2A
     CodeGenerator verifyA = new CodeGenerator() {
 
@@ -365,36 +305,6 @@ public class TestLDA {
       exprs.addAll(reg.apply(memoryControllerBack));
     }
     
-    // check that we are in state InstructionFetch
-    exprs.addAll(reg.apply(verifyStateInstructionFetch));
-    // check that the program counter is pointing to $0003
-    CodeGenerator verifyPC = new CodeGenerator() {
-
-      @Override
-      public Set<String> getStateVariablesRead() {
-        return new HashSet<String>(Arrays.asList(new String[]{
-            "CPU_PC"
-        }));
-      }
-
-      @Override
-      public Set<String> getStateVariablesWritten() {
-        return new HashSet<>();
-      }
-
-      @Override
-      public List<SExpression> generateCode(Map<String, Symbol> inputs,
-          Map<String, Symbol> outputs) {
-        List<SExpression> exprs = new LinkedList<>();
-        
-        Symbol PC = inputs.get("CPU_PC");
-        exprs.add(new Assertion(new EqualsExpression(PC, new BinaryConstant("0000000000000011"))));
-        
-        return exprs;
-      }
-      
-    };
-    exprs.addAll(reg.apply(verifyPC));
     // check that A = $E2
     CodeGenerator verifyA = new CodeGenerator() {
 
