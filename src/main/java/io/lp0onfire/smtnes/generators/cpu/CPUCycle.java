@@ -384,6 +384,11 @@ public class CPUCycle implements CodeGenerator {
             ))));
 
     // opcode B5: LDA zeropage,x
+    // cycle 0: read [PC], increment PC
+    // cycle 1: CalcAddr[7:0] = DataIn, read [CalcAddr]
+    // cycle 2: ignore DataIn, CalcAddr[7:0] += X (discarding overflow), read [CalcAddr]
+    // cycle 3: set A, set P, instruction fetch
+    
     // opcode AD: LDA absolute
     // cycle 0: read [PC], increment PC
     // cycle 1: CalcAddr[7:0] = DataIn, read [PC], increment PC
