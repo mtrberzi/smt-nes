@@ -538,7 +538,7 @@ public class CPUCycle implements CodeGenerator {
         );
     // this happens in cycle 2 no matter what
     exprs.add(new Assertion(new Implication(
-        new EqualsExpression(State_current, CPUState.LDA_ABX_Cycle1.toBinaryConstant()), 
+        new EqualsExpression(State_current, CPUState.LDA_ABX_Cycle2.toBinaryConstant()), 
         new AndExpression(
             preserveA(), preserveX(), preserveY(), preserveSP(), preserveP(), preservePC(),
             new EqualsExpression(CalcAddr_next, LDA_ABX_CalcAddr_Cycle2)
