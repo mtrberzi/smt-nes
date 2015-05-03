@@ -503,6 +503,103 @@ public class CPUCycle implements CodeGenerator {
             new EqualsExpression(State_next, CPUState.InstructionFetch.toBinaryConstant())
             ))));
     // opcode BD: LDA absolute,x
+    // cycle 0: read [PC], increment PC
+    // cycle 1: CalcAddr[7:0] = DataIn, read [PC], increment PC
+    // cycle 2: CalcAddr = (DataIn ++ CalcAddr[7:0]) + (0x00 ++ X)
+    // if (CalcAddr[7:0] + X >= 0x100) then read [DataIn ++ (CalcAddr[7:0] + X)] (CalcAddr without carry into high byte) and do cycle 2x; 
+    // otherwise read [CalcAddr] and do cycle 3
+    // cycle 2x: discard DataIn, read [CalcAddr]
+    // cycle 3: set A, set P, instruction fetch
+    exprs.add(new Assertion(new Implication(
+        new AndExpression(new EqualsExpression(State_current, CPUState.InstructionFetch.toBinaryConstant()),
+            new EqualsExpression(DataIn_current, new HexConstant("BD"))), 
+        new AndExpression(
+            preserveA(), preserveX(), preserveY(), preserveSP(), preserveP(),
+            fetchPC(), incrementPC(),
+            new EqualsExpression(State_next, CPUState.LDA_ABX_Cycle1.toBinaryConstant())
+            ))));
+    exprs.add(new Assertion(new Implication(
+        new EqualsExpression(State_current, CPUState.LDA_ABX_Cycle1.toBinaryConstant()), 
+        new AndExpression(
+            preserveA(), preserveX(), preserveY(), preserveSP(), preserveP(),
+            new EqualsExpression(CalcAddr_next, new BitVectorConcatExpression(new BinaryConstant("00000000"), DataIn_current)),
+            fetchPC(), incrementPC(),
+            new EqualsExpression(State_next, CPUState.LDA_ABX_Cycle2.toBinaryConstant())
+            ))));
+    SExpression LDA_ABX_CalcAddr_Cycle2 = new BitVectorAddExpression(
+        new BitVectorConcatExpression(DataIn_current, new BitVectorExtractExpression(CalcAddr_current, new Numeral("7"), new Numeral("0"))),
+        new BitVectorConcatExpression(new BinaryConstant("00000000"), X_current)
+        );
+    SExpression LDA_ABX_Overflow_Cycle2 = new BitVectorUnsignedGreaterEqualExpression(
+        new BitVectorAddExpression(
+            new BitVectorConcatExpression(new BinaryConstant("1"), new BitVectorExtractExpression(CalcAddr_current, new Numeral("7"), new Numeral("0"))),
+            new BitVectorConcatExpression(new BinaryConstant("1"), X_current)),
+        new BinaryConstant("100000000")
+        );
+    // this happens in cycle 2 no matter what
+    exprs.add(new Assertion(new Implication(
+        new EqualsExpression(State_current, CPUState.LDA_ABX_Cycle1.toBinaryConstant()), 
+        new AndExpression(
+            preserveA(), preserveX(), preserveY(), preserveSP(), preserveP(), preservePC(),
+            new EqualsExpression(CalcAddr_next, LDA_ABX_CalcAddr_Cycle2)
+            ))));
+    // now the conditional for overflow
+    exprs.add(new Assertion(new Implication(new AndExpression(
+        new EqualsExpression(State_current, CPUState.LDA_ABX_Cycle2.toBinaryConstant()),
+        LDA_ABX_Overflow_Cycle2
+        ), new AndExpression(
+            new EqualsExpression(AddressBus_next, new BitVectorConcatExpression(DataIn_current, new BitVectorAddExpression(
+                new BitVectorExtractExpression(CalcAddr_current, new Numeral("7"), new Numeral("0")), X_current))),
+            new EqualsExpression(WriteEnable_next, new BinaryConstant("0")),
+            new EqualsExpression(DataOut_next, new BinaryConstant("00000000")),
+            new EqualsExpression(State_next, CPUState.LDA_ABX_Cycle2x.toBinaryConstant())
+            ))));
+    exprs.add(new Assertion(new Implication(new AndExpression(
+        new EqualsExpression(State_current, CPUState.LDA_ABX_Cycle2.toBinaryConstant()),
+        new NotExpression(LDA_ABX_Overflow_Cycle2)
+        ), new AndExpression(
+            new EqualsExpression(AddressBus_next, LDA_ABX_CalcAddr_Cycle2),
+            new EqualsExpression(WriteEnable_next, new BinaryConstant("0")),
+            new EqualsExpression(DataOut_next, new BinaryConstant("00000000")),
+            new EqualsExpression(State_next, CPUState.LDA_ABX_Cycle3.toBinaryConstant())
+            ))));
+    exprs.add(new Assertion(new Implication(
+        new EqualsExpression(State_current, CPUState.LDA_ABX_Cycle2x.toBinaryConstant()),
+        new AndExpression(
+            preserveA(), preserveX(), preserveY(), preserveSP(), preserveP(), preservePC(),
+            new EqualsExpression(AddressBus_next, CalcAddr_current),
+            new EqualsExpression(WriteEnable_next, new BinaryConstant("0")),
+            new EqualsExpression(DataOut_next, new BinaryConstant("00000000")),
+            new EqualsExpression(State_next, CPUState.LDA_ABX_Cycle3.toBinaryConstant())
+        ))));
+    exprs.add(new Assertion(new Implication(
+        new EqualsExpression(State_current, CPUState.LDA_ABX_Cycle3.toBinaryConstant()),
+        new AndExpression(
+            new EqualsExpression(A_next, DataIn_current),
+            preserveX(), preserveY(), preserveSP(), 
+            new EqualsExpression(P_next, new BitVectorConcatExpression(
+                new BitVectorConcatExpression(
+                // 7 P[Z]
+                    new ConditionalExpression(
+                        new EqualsExpression(DataIn_current, new BinaryConstant("00000000")), 
+                        new BinaryConstant("1"), new BinaryConstant("0")),
+                // 6 downto 2
+                    new BitVectorExtractExpression(P_current, new Numeral("6"), new Numeral("2"))
+                    ),
+                new BitVectorConcatExpression(
+                // 1 P[N]
+                    new ConditionalExpression(
+                        new EqualsExpression(new BitVectorExtractExpression(DataIn_current, new Numeral("7"), new Numeral("7")), 
+                            new BinaryConstant("1")), 
+                        new BinaryConstant("1"), new BinaryConstant("0")),
+                // 0
+                    new BitVectorExtractExpression(P_current, new Numeral("0"), new Numeral("0"))
+                    )
+                )),
+            fetchPC(), incrementPC(),
+            new EqualsExpression(State_next, CPUState.InstructionFetch.toBinaryConstant())
+            ))));
+    
     // opcode B9: LDA absolute,y
     // opcode A1: LDA indirect,x
     // opcode B1: LDA indirect,y

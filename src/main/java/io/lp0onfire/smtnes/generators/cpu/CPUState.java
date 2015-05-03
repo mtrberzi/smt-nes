@@ -17,6 +17,10 @@ public enum CPUState {
   LDA_ZPX_Cycle1(8),
   LDA_ZPX_Cycle2(9),
   LDA_ZPX_Cycle3(10),
+  LDA_ABX_Cycle1(11),
+  LDA_ABX_Cycle2(12),
+  LDA_ABX_Cycle2x(13),
+  LDA_ABX_Cycle3(14),
   ;
   
   private final int index;
