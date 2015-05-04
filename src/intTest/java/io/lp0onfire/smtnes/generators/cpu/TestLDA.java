@@ -746,7 +746,141 @@ public class TestLDA {
   
   @Test
   public void testLDA_INX() throws IOException {
-    fail("not yet implemented");
+    // opcode A1
+    
+    // run the program
+    // $0000: A1 20  LDA ($20,X)
+    // ...
+    // $0032: 76 05
+    // ...
+    // $0576: D4
+    // with X = $12
+    // and expect to see A = $D4
+    
+    List<SExpression> exprs = new LinkedList<>();
+    StateVariableRegistry reg = new StateVariableRegistry();
+    
+    ROMBurner burner = new ROMBurner("TestROM");
+    burner.write(0x000, 0xA1);
+    burner.write(0x001, 0x20);
+    burner.write(0x032, 0x76);
+    burner.write(0x033, 0x05);
+    burner.write(0x576, 0xD4);
+    // reset vector
+    burner.write(0xFFD, 0x00); // high byte
+    burner.write(0xFFC, 0x00); // low byte
+    
+    
+    // map the first and last page into RAM
+    ArrayList<PageHandler> pageHandlers = new ArrayList<>(16);
+    PageHandler ramPageHandler = burner.getCPUPageHandler();
+    PageHandler nullPageHandler = new NullPageHandler();
+    pageHandlers.add(0, ramPageHandler);
+    for (int i = 1; i < 15; ++i) {
+      pageHandlers.add(i, nullPageHandler);
+    }
+    pageHandlers.add(15, ramPageHandler);
+    
+    CodeGenerator memoryControllerFront = new CPUMemoryControllerFrontHalf(pageHandlers);
+    CodeGenerator memoryControllerBack = new CPUMemoryControllerBackHalf(pageHandlers);
+    
+    // initialize CPU once
+    CodeGenerator cpuPowerOn = new CPUPowerOn();
+    exprs.addAll(reg.apply(cpuPowerOn));
+    
+    // initialize RAM
+    CodeGenerator initRAM = burner.getInitializer();
+    exprs.addAll(reg.apply(initRAM));
+    
+    // set Y = $0A
+    exprs.addAll(reg.apply(new CodeGenerator(){
+      @Override
+      public Set<String> getStateVariablesRead() {
+        return new HashSet<>();
+      }
+
+      @Override
+      public Set<String> getStateVariablesWritten() {
+        return new HashSet<String>(Arrays.asList(new String[]{
+            "CPU_X"
+        }));
+      }
+
+      @Override
+      public List<SExpression> generateCode(Map<String, Symbol> inputs,
+          Map<String, Symbol> outputs) {
+        List<SExpression> exprs = new LinkedList<>();
+        
+        Symbol X = outputs.get("CPU_X");
+        exprs.add(new BitVectorDeclaration(X, new Numeral("8")));
+        exprs.add(new Assertion(new EqualsExpression(X, new HexConstant("12"))));
+        
+        return exprs;
+      }
+    }));
+    
+    CodeGenerator cpuCycle = new CPUCycle();
+    CodeGenerator verifyStateInstructionFetch = new VerifyCPUState(CPUState.InstructionFetch);
+    
+    // reset sequence
+    for (int i = 0; i < 8; ++i) {
+      exprs.addAll(reg.apply(cpuCycle));
+      exprs.addAll(reg.apply(memoryControllerFront));
+      exprs.addAll(reg.apply(nullPageHandler));
+      exprs.addAll(reg.apply(ramPageHandler));
+      exprs.addAll(reg.apply(memoryControllerBack));
+    }
+    exprs.addAll(reg.apply(verifyStateInstructionFetch));
+    
+    // execute instruction
+    // LDA indirect,x takes 6 cycles
+    
+    for (int i = 0; i < 6; ++i) {
+      exprs.addAll(reg.apply(cpuCycle));
+      exprs.addAll(reg.apply(memoryControllerFront));
+      exprs.addAll(reg.apply(nullPageHandler));
+      exprs.addAll(reg.apply(ramPageHandler));
+      exprs.addAll(reg.apply(memoryControllerBack));
+    }
+    
+    // check that A = $49
+    CodeGenerator verifyA = new CodeGenerator() {
+
+      @Override
+      public Set<String> getStateVariablesRead() {
+        return new HashSet<String>(Arrays.asList(new String[]{
+            "CPU_A"
+        }));
+      }
+
+      @Override
+      public Set<String> getStateVariablesWritten() {
+        return new HashSet<>();
+      }
+
+      @Override
+      public List<SExpression> generateCode(Map<String, Symbol> inputs,
+          Map<String, Symbol> outputs) {
+        List<SExpression> exprs = new LinkedList<>();
+        
+        Symbol A = inputs.get("CPU_A");
+        exprs.add(new Assertion(new EqualsExpression(A, new HexConstant("D4"))));
+        
+        return exprs;
+      }
+      
+    };
+    exprs.addAll(reg.apply(verifyA));
+    
+    
+    try(Z3 z3 = new Z3()) {
+      z3.open();
+      for(SExpression expr : exprs) {
+        z3.write(expr.toString());
+      }
+      assertTrue(z3.checkSat());
+    }
+    
   }
   
   @Test
