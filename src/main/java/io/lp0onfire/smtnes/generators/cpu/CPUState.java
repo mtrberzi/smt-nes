@@ -8,6 +8,33 @@ public enum CPUState {
 
   Resetting(0), // instead look at ResetSequence
   InstructionFetch(1), // read instruction from DataIn
+  LDA_IMM_Cycle1(2),
+  LDA_ZPG_Cycle1(3),
+  LDA_ZPG_Cycle2(4),
+  LDA_ABS_Cycle1(5),
+  LDA_ABS_Cycle2(6),
+  LDA_ABS_Cycle3(7),
+  LDA_ZPX_Cycle1(8),
+  LDA_ZPX_Cycle2(9),
+  LDA_ZPX_Cycle3(10),
+  LDA_ABX_Cycle1(11),
+  LDA_ABX_Cycle2(12),
+  LDA_ABX_Cycle2x(13),
+  LDA_ABX_Cycle3(14),
+  LDA_ABY_Cycle1(15),
+  LDA_ABY_Cycle2(16),
+  LDA_ABY_Cycle2x(17),
+  LDA_ABY_Cycle3(18),
+  LDA_INX_Cycle1(19),
+  LDA_INX_Cycle2(20),
+  LDA_INX_Cycle3(21),
+  LDA_INX_Cycle4(22),
+  LDA_INX_Cycle5(23),
+  LDA_INY_Cycle1(24),
+  LDA_INY_Cycle2(25),
+  LDA_INY_Cycle3(26),
+  LDA_INY_Cycle3x(27),
+  LDA_INY_Cycle4(28),
   ;
   
   private final int index;
