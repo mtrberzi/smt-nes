@@ -7,11 +7,25 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang3.StringUtils;
+
 import io.lp0onfire.smtnes.PageHandler;
 import io.lp0onfire.smtnes.smt2.*;
 
 public class CPURAMHandler extends PageHandler {
 
+  // If true, generates equality expressions involving array terms,
+  // which cannot be handled by some solvers (such as STP).
+  // If false, replaces these with equivalent expressions asserting that
+  // each element in corresponding arrays is equal. This does not rely on
+  // array extensionality, but it also causes an exponential blow-up of the
+  // input formula, since 2^N terms must be generated to copy an
+  // array that uses N address bits.
+  private static boolean useArrayExtensionality = true;
+  public static void setUseArrayExtensionality(boolean b) {
+    useArrayExtensionality = b;
+  }
+  
   @Override
   public String getHandlerPrefix() {
     return "RAM_";
@@ -30,7 +44,7 @@ public class CPURAMHandler extends PageHandler {
         "CPU_RAM"
     }));
   }
-
+  
   @Override
   public List<SExpression> generateCode(Map<String, Symbol> inputs,
       Map<String, Symbol> outputs) {
@@ -52,15 +66,25 @@ public class CPURAMHandler extends PageHandler {
     
     // extract 11-bit address
     SExpression RAM_Address = new BitVectorExtractExpression(Address, new Numeral("10"), new Numeral("0"));
-    
-    // TODO this is one of the few places where array extensionality is used;
-    // if it is efficient to eliminate (or at least to provide the option to generate it differently),
-    // then we can use this in STP and other solvers that don't implement the Ex in ArraysEx
-    
+       
     // if ChipSelect = 0, don't do anything:
     // RAM_next <= RAM_current and DataOut <= 0x00
-    exprs.add(new Assertion(new Implication(new EqualsExpression(ChipSelect, new BinaryConstant("0")), 
-        new EqualsExpression(RAM_next, RAM_current))));
+    if (useArrayExtensionality) {
+      exprs.add(new Assertion(new Implication(new EqualsExpression(ChipSelect, new BinaryConstant("0")), 
+          new EqualsExpression(RAM_next, RAM_current))));
+    } else {
+      for (int i = 0; i < 2048; ++i) {
+        // convert i to an 11-bit constant
+        String bits = Integer.toBinaryString(i);
+        // zero-pad on the left
+        int zeroCount = 11 - bits.length();
+        BinaryConstant address = new BinaryConstant(StringUtils.repeat('0', zeroCount) + bits);
+        exprs.add(new Assertion(new Implication(new EqualsExpression(ChipSelect, new BinaryConstant("0")), 
+            new EqualsExpression(
+                new ArrayReadExpression(RAM_next, address), 
+                new ArrayReadExpression(RAM_current, address)))));
+      }
+    }
     exprs.add(new Assertion(new Implication(new EqualsExpression(ChipSelect, new BinaryConstant("0")), 
         new EqualsExpression(DataOut, new BinaryConstant("00000000")))));
     
@@ -68,12 +92,29 @@ public class CPURAMHandler extends PageHandler {
     // RAM_next <= RAM_current and DataOut <= RAM_current[Address & 0x07FF]
     // (the lowest 11 bits of Address)
     
-    exprs.add(new Assertion(new Implication(
-        new AndExpression(
+    if (useArrayExtensionality) {
+      exprs.add(new Assertion(new Implication(
+          new AndExpression(
+              new EqualsExpression(ChipSelect, new BinaryConstant("1")),
+              new EqualsExpression(WriteEnable, new BinaryConstant("0"))
+              ), 
+          new EqualsExpression(RAM_next, RAM_current))));
+    } else {
+      for (int i = 0; i < 2048; ++i) {
+        // convert i to an 11-bit constant
+        String bits = Integer.toBinaryString(i);
+        // zero-pad on the left
+        int zeroCount = 11 - bits.length();
+        BinaryConstant address = new BinaryConstant(StringUtils.repeat('0', zeroCount) + bits);
+        exprs.add(new Assertion(new Implication(new AndExpression(
             new EqualsExpression(ChipSelect, new BinaryConstant("1")),
             new EqualsExpression(WriteEnable, new BinaryConstant("0"))
             ), 
-        new EqualsExpression(RAM_next, RAM_current))));
+            new EqualsExpression(
+                new ArrayReadExpression(RAM_next, address), 
+                new ArrayReadExpression(RAM_current, address)))));
+      }
+    }
     exprs.add(new Assertion(new Implication(
         new AndExpression(
             new EqualsExpression(ChipSelect, new BinaryConstant("1")),
@@ -85,12 +126,29 @@ public class CPURAMHandler extends PageHandler {
     // RAM_next <= store(RAM_current, Address & 0x07FF, DataIn) and
     // (??? this is probably correct to simulate a tri-state shared data bus) DataOut <= DataIn
     
-    exprs.add(new Assertion(new Implication(
-        new AndExpression(
+    if (useArrayExtensionality) {
+      exprs.add(new Assertion(new Implication(
+          new AndExpression(
+              new EqualsExpression(ChipSelect, new BinaryConstant("1")),
+              new EqualsExpression(WriteEnable, new BinaryConstant("1"))
+              ), 
+          new EqualsExpression(RAM_next, new ArrayWriteExpression(RAM_current, RAM_Address, DataIn)))));
+    } else {
+      for (int i = 0; i < 2048; ++i) {
+        // convert i to an 11-bit constant
+        String bits = Integer.toBinaryString(i);
+        // zero-pad on the left
+        int zeroCount = 11 - bits.length();
+        BinaryConstant address = new BinaryConstant(StringUtils.repeat('0', zeroCount) + bits);
+        exprs.add(new Assertion(new Implication(new AndExpression(
             new EqualsExpression(ChipSelect, new BinaryConstant("1")),
             new EqualsExpression(WriteEnable, new BinaryConstant("1"))
             ), 
-        new EqualsExpression(RAM_next, new ArrayWriteExpression(RAM_current, RAM_Address, DataIn)))));
+            new EqualsExpression(
+                new ArrayReadExpression(RAM_next, address), 
+                new ArrayReadExpression(new ArrayWriteExpression(RAM_current, RAM_Address, DataIn), address)))));
+      }
+    }
     exprs.add(new Assertion(new Implication(
         new AndExpression(
             new EqualsExpression(ChipSelect, new BinaryConstant("1")),
