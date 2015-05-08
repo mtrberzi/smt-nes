@@ -34,7 +34,20 @@ public enum CPUState {
   LDA_INY_Cycle2(25),
   LDA_INY_Cycle3(26),
   LDA_INY_Cycle3x(27),
-  LDA_INY_Cycle4(28),
+  LDA_INY_Cycle4(28), 
+  LDX_IMM_Cycle1(29), 
+  LDX_ZPG_Cycle1(30), 
+  LDX_ZPG_Cycle2(31), 
+  LDX_ZPY_Cycle1(32), 
+  LDX_ZPY_Cycle2(33), 
+  LDX_ZPY_Cycle3(34), 
+  LDX_ABS_Cycle1(35), 
+  LDX_ABS_Cycle2(36), 
+  LDX_ABS_Cycle3(37), 
+  LDX_ABY_Cycle1(38), 
+  LDX_ABY_Cycle2(39), 
+  LDX_ABY_Cycle2x(40), 
+  LDX_ABY_Cycle3(41),
   ;
   
   private final int index;
