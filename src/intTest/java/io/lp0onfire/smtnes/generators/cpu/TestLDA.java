@@ -1099,7 +1099,7 @@ public class TestLDA {
     // execute instruction
     // LDA indirect,y takes 5 cycles if we don't cross the page
     
-    for (int i = 0; i < 6; ++i) {
+    for (int i = 0; i < 5; ++i) {
       exprs.addAll(reg.apply(cpuCycle));
       exprs.addAll(reg.apply(memoryControllerFront));
       exprs.addAll(reg.apply(nullPageHandler));
