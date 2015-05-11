@@ -866,7 +866,7 @@ public class CPUCycle implements CodeGenerator {
         LDA_INY_Overflow_Cycle3
         ), new AndExpression(
             new EqualsExpression(AddressBus_next, new BitVectorConcatExpression(DataIn_current, new BitVectorAddExpression(
-                new BitVectorExtractExpression(CalcAddr_current, new Numeral("7"), new Numeral("0")), X_current))),
+                new BitVectorExtractExpression(CalcAddr_current, new Numeral("7"), new Numeral("0")), Y_current))),
             new EqualsExpression(WriteEnable_next, new BinaryConstant("0")),
             new EqualsExpression(DataOut_next, new BinaryConstant("00000000")),
             new EqualsExpression(State_next, CPUState.LDA_INY_Cycle3x.toBinaryConstant())
