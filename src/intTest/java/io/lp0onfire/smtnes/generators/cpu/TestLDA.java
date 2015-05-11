@@ -15,11 +15,24 @@ import io.lp0onfire.smtnes.StateVariableRegistry;
 import io.lp0onfire.smtnes.Z3;
 import io.lp0onfire.smtnes.smt2.*;
 
+import org.apache.commons.collections4.ListUtils;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
 
 public class TestLDA {
+  
+  private void interpretResult(boolean pos, boolean neg) {
+    if (pos && !neg) {
+      return; // fine
+    } else if (pos && neg) {
+      fail("contingency check failed; formula is valid regardless of assertion");
+    } else if (!pos && neg) {
+      fail("contingency check failed; execution produces incorrect value (-pos, +neg)");
+    } else { // !pos && !neg
+      fail("contingency check failed; formula is unsatisfiable regardless of assertion");
+    }
+  }
   
   @Test(timeout=60 * 1000)
   public void testLDA_IMM() throws IOException {
@@ -106,22 +119,38 @@ public class TestLDA {
         List<SExpression> exprs = new LinkedList<>();
         
         Symbol A = inputs.get("CPU_A");
-        exprs.add(new Assertion(new EqualsExpression(A, new HexConstant("5A"))));
+        exprs.add(new EqualsExpression(A, new HexConstant("5A")));
         
         return exprs;
       }
       
     };
-    exprs.addAll(reg.apply(verifyA));
+    List<SExpression> positiveContingents = new LinkedList<>();
+    List<SExpression> negativeContingents = new LinkedList<>();
+    for (SExpression expr : reg.apply(verifyA)) {
+      positiveContingents.add(new Assertion(expr));
+      negativeContingents.add(new Assertion(new NotExpression(expr)));
+    }
     
+    boolean positiveResult;
+    boolean negativeResult;
     
     try(Z3 z3 = new Z3()) {
       z3.open();
-      for(SExpression expr : exprs) {
+      for(SExpression expr : ListUtils.union(exprs, positiveContingents)) {
         z3.write(expr.toString());
       }
-      assertTrue(z3.checkSat());
+      positiveResult = z3.checkSat();
     }
+    try(Z3 z3 = new Z3()) {
+      z3.open();
+      for(SExpression expr : ListUtils.union(exprs, negativeContingents)) {
+        z3.write(expr.toString());
+      }
+      negativeResult = z3.checkSat();
+    }
+    
+    interpretResult(positiveResult, negativeResult);
     
   }
   
@@ -213,22 +242,38 @@ public class TestLDA {
         List<SExpression> exprs = new LinkedList<>();
         
         Symbol A = inputs.get("CPU_A");
-        exprs.add(new Assertion(new EqualsExpression(A, new HexConstant("2A"))));
+        exprs.add(new EqualsExpression(A, new HexConstant("2A")));
         
         return exprs;
       }
       
     };
-    exprs.addAll(reg.apply(verifyA));
+    List<SExpression> positiveContingents = new LinkedList<>();
+    List<SExpression> negativeContingents = new LinkedList<>();
+    for (SExpression expr : reg.apply(verifyA)) {
+      positiveContingents.add(new Assertion(expr));
+      negativeContingents.add(new Assertion(new NotExpression(expr)));
+    }
     
+    boolean positiveResult;
+    boolean negativeResult;
     
     try(Z3 z3 = new Z3()) {
       z3.open();
-      for(SExpression expr : exprs) {
+      for(SExpression expr : ListUtils.union(exprs, positiveContingents)) {
         z3.write(expr.toString());
       }
-      assertTrue(z3.checkSat());
+      positiveResult = z3.checkSat();
     }
+    try(Z3 z3 = new Z3()) {
+      z3.open();
+      for(SExpression expr : ListUtils.union(exprs, negativeContingents)) {
+        z3.write(expr.toString());
+      }
+      negativeResult = z3.checkSat();
+    }
+    
+    interpretResult(positiveResult, negativeResult);
     
   }
   
@@ -348,22 +393,38 @@ public class TestLDA {
         List<SExpression> exprs = new LinkedList<>();
         
         Symbol A = inputs.get("CPU_A");
-        exprs.add(new Assertion(new EqualsExpression(A, new HexConstant("53"))));
+        exprs.add(new EqualsExpression(A, new HexConstant("53")));
         
         return exprs;
       }
       
     };
-    exprs.addAll(reg.apply(verifyA));
+    List<SExpression> positiveContingents = new LinkedList<>();
+    List<SExpression> negativeContingents = new LinkedList<>();
+    for (SExpression expr : reg.apply(verifyA)) {
+      positiveContingents.add(new Assertion(expr));
+      negativeContingents.add(new Assertion(new NotExpression(expr)));
+    }
     
+    boolean positiveResult;
+    boolean negativeResult;
     
     try(Z3 z3 = new Z3()) {
       z3.open();
-      for(SExpression expr : exprs) {
+      for(SExpression expr : ListUtils.union(exprs, positiveContingents)) {
         z3.write(expr.toString());
       }
-      assertTrue(z3.checkSat());
+      positiveResult = z3.checkSat();
     }
+    try(Z3 z3 = new Z3()) {
+      z3.open();
+      for(SExpression expr : ListUtils.union(exprs, negativeContingents)) {
+        z3.write(expr.toString());
+      }
+      negativeResult = z3.checkSat();
+    }
+    
+    interpretResult(positiveResult, negativeResult);
     
   }
   
@@ -456,22 +517,38 @@ public class TestLDA {
         List<SExpression> exprs = new LinkedList<>();
         
         Symbol A = inputs.get("CPU_A");
-        exprs.add(new Assertion(new EqualsExpression(A, new HexConstant("E2"))));
+        exprs.add(new EqualsExpression(A, new HexConstant("E2")));
         
         return exprs;
       }
       
     };
-    exprs.addAll(reg.apply(verifyA));
+    List<SExpression> positiveContingents = new LinkedList<>();
+    List<SExpression> negativeContingents = new LinkedList<>();
+    for (SExpression expr : reg.apply(verifyA)) {
+      positiveContingents.add(new Assertion(expr));
+      negativeContingents.add(new Assertion(new NotExpression(expr)));
+    }
     
+    boolean positiveResult;
+    boolean negativeResult;
     
     try(Z3 z3 = new Z3()) {
       z3.open();
-      for(SExpression expr : exprs) {
+      for(SExpression expr : ListUtils.union(exprs, positiveContingents)) {
         z3.write(expr.toString());
       }
-      assertTrue(z3.checkSat());
+      positiveResult = z3.checkSat();
     }
+    try(Z3 z3 = new Z3()) {
+      z3.open();
+      for(SExpression expr : ListUtils.union(exprs, negativeContingents)) {
+        z3.write(expr.toString());
+      }
+      negativeResult = z3.checkSat();
+    }
+    
+    interpretResult(positiveResult, negativeResult);
   }
   
   @Test
@@ -591,22 +668,38 @@ public class TestLDA {
         List<SExpression> exprs = new LinkedList<>();
         
         Symbol A = inputs.get("CPU_A");
-        exprs.add(new Assertion(new EqualsExpression(A, new HexConstant("49"))));
+        exprs.add(new EqualsExpression(A, new HexConstant("49")));
         
         return exprs;
       }
       
     };
-    exprs.addAll(reg.apply(verifyA));
+    List<SExpression> positiveContingents = new LinkedList<>();
+    List<SExpression> negativeContingents = new LinkedList<>();
+    for (SExpression expr : reg.apply(verifyA)) {
+      positiveContingents.add(new Assertion(expr));
+      negativeContingents.add(new Assertion(new NotExpression(expr)));
+    }
     
+    boolean positiveResult;
+    boolean negativeResult;
     
     try(Z3 z3 = new Z3()) {
       z3.open();
-      for(SExpression expr : exprs) {
+      for(SExpression expr : ListUtils.union(exprs, positiveContingents)) {
         z3.write(expr.toString());
       }
-      assertTrue(z3.checkSat());
+      positiveResult = z3.checkSat();
     }
+    try(Z3 z3 = new Z3()) {
+      z3.open();
+      for(SExpression expr : ListUtils.union(exprs, negativeContingents)) {
+        z3.write(expr.toString());
+      }
+      negativeResult = z3.checkSat();
+    }
+    
+    interpretResult(positiveResult, negativeResult);
   }
   
   @Test
@@ -726,22 +819,38 @@ public class TestLDA {
         List<SExpression> exprs = new LinkedList<>();
         
         Symbol A = inputs.get("CPU_A");
-        exprs.add(new Assertion(new EqualsExpression(A, new HexConstant("49"))));
+        exprs.add(new EqualsExpression(A, new HexConstant("49")));
         
         return exprs;
       }
       
     };
-    exprs.addAll(reg.apply(verifyA));
+    List<SExpression> positiveContingents = new LinkedList<>();
+    List<SExpression> negativeContingents = new LinkedList<>();
+    for (SExpression expr : reg.apply(verifyA)) {
+      positiveContingents.add(new Assertion(expr));
+      negativeContingents.add(new Assertion(new NotExpression(expr)));
+    }
     
+    boolean positiveResult;
+    boolean negativeResult;
     
     try(Z3 z3 = new Z3()) {
       z3.open();
-      for(SExpression expr : exprs) {
+      for(SExpression expr : ListUtils.union(exprs, positiveContingents)) {
         z3.write(expr.toString());
       }
-      assertTrue(z3.checkSat());
+      positiveResult = z3.checkSat();
     }
+    try(Z3 z3 = new Z3()) {
+      z3.open();
+      for(SExpression expr : ListUtils.union(exprs, negativeContingents)) {
+        z3.write(expr.toString());
+      }
+      negativeResult = z3.checkSat();
+    }
+    
+    interpretResult(positiveResult, negativeResult);
   }
   
   @Test
@@ -864,22 +973,38 @@ public class TestLDA {
         List<SExpression> exprs = new LinkedList<>();
         
         Symbol A = inputs.get("CPU_A");
-        exprs.add(new Assertion(new EqualsExpression(A, new HexConstant("D4"))));
+        exprs.add(new EqualsExpression(A, new HexConstant("D4")));
         
         return exprs;
       }
       
     };
-    exprs.addAll(reg.apply(verifyA));
+    List<SExpression> positiveContingents = new LinkedList<>();
+    List<SExpression> negativeContingents = new LinkedList<>();
+    for (SExpression expr : reg.apply(verifyA)) {
+      positiveContingents.add(new Assertion(expr));
+      negativeContingents.add(new Assertion(new NotExpression(expr)));
+    }
     
+    boolean positiveResult;
+    boolean negativeResult;
     
     try(Z3 z3 = new Z3()) {
       z3.open();
-      for(SExpression expr : exprs) {
+      for(SExpression expr : ListUtils.union(exprs, positiveContingents)) {
         z3.write(expr.toString());
       }
-      assertTrue(z3.checkSat());
+      positiveResult = z3.checkSat();
     }
+    try(Z3 z3 = new Z3()) {
+      z3.open();
+      for(SExpression expr : ListUtils.union(exprs, negativeContingents)) {
+        z3.write(expr.toString());
+      }
+      negativeResult = z3.checkSat();
+    }
+    
+    interpretResult(positiveResult, negativeResult);
     
   }
   
@@ -1003,22 +1128,38 @@ public class TestLDA {
         List<SExpression> exprs = new LinkedList<>();
         
         Symbol A = inputs.get("CPU_A");
-        exprs.add(new Assertion(new EqualsExpression(A, new HexConstant("3F"))));
+        exprs.add(new EqualsExpression(A, new HexConstant("3F")));
         
         return exprs;
       }
       
     };
-    exprs.addAll(reg.apply(verifyA));
+    List<SExpression> positiveContingents = new LinkedList<>();
+    List<SExpression> negativeContingents = new LinkedList<>();
+    for (SExpression expr : reg.apply(verifyA)) {
+      positiveContingents.add(new Assertion(expr));
+      negativeContingents.add(new Assertion(new NotExpression(expr)));
+    }
     
+    boolean positiveResult;
+    boolean negativeResult;
     
     try(Z3 z3 = new Z3()) {
       z3.open();
-      for(SExpression expr : exprs) {
+      for(SExpression expr : ListUtils.union(exprs, positiveContingents)) {
         z3.write(expr.toString());
       }
-      assertTrue(z3.checkSat());
+      positiveResult = z3.checkSat();
     }
+    try(Z3 z3 = new Z3()) {
+      z3.open();
+      for(SExpression expr : ListUtils.union(exprs, negativeContingents)) {
+        z3.write(expr.toString());
+      }
+      negativeResult = z3.checkSat();
+    }
+    
+    interpretResult(positiveResult, negativeResult);
     
   }
   
