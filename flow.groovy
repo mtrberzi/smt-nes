@@ -14,5 +14,13 @@ branches["check"] = {
     step([$class: 'JUnitResultArchiver', testResults: 'build/test-results/*.xml'])
   }
 }
+branches["intTestAll"] = {
+  node('z3') {
+    sh 'rm -rf *'
+    unarchive mapping: ['build.gradle' : '.', 'src/' : '.']
+    sh "gradle intTest"
+    step([$class: 'JUnitResultArchiver', testResults: 'build/test-results/*.xml'])
+  }
+}
 parallel branches
 
