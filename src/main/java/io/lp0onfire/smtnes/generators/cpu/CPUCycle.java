@@ -168,6 +168,7 @@ public class CPUCycle implements CodeGenerator {
     exprs.addAll(handleReset());
     exprs.addAll(instruction_LDA());
     exprs.addAll(instruction_LDX());
+    exprs.addAll(instruction_STA());
     
     return exprs;
   }
