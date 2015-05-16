@@ -1238,4 +1238,52 @@ public class CPUCycle implements CodeGenerator {
     return exprs;
   }
   
+  private List<SExpression> instruction_STA() {
+    List<SExpression> exprs = new LinkedList<>();
+    
+    // opcodes that use STA:
+    // 81 (INX), 91 (INYW), 99 (ABYW), 85 (ZPG), 95 (ZPX), 8D (ABS), 9D (ABXW)
+    
+    // operation of STA:
+    // * MemSet(CalcAddr, A)
+    
+    // opcode 85: STA zeropage
+    // cycle 0: read [PC], increment PC
+    // cycle 1: write A to [$00 ++ PC] 
+    // cycle 2: instruction fetch
+    exprs.add(new Assertion(new Implication(
+        new AndExpression(new EqualsExpression(State_current, CPUState.InstructionFetch.toBinaryConstant()),
+            new EqualsExpression(DataIn_current, new HexConstant("85"))), 
+        new AndExpression(
+            preserveA(), preserveX(), preserveY(), preserveSP(), preserveP(),
+            fetchPC(), incrementPC(),
+            new EqualsExpression(State_next, CPUState.STA_ZPG_Cycle1.toBinaryConstant())
+            ))));
+    exprs.add(new Assertion(
+        new Implication(new EqualsExpression(State_current, CPUState.STA_ZPG_Cycle1.toBinaryConstant()),
+        new AndExpression(
+            preserveA(), preserveX(), preserveY(), preserveSP(), preserveP(), preservePC(),
+            new EqualsExpression(AddressBus_next, new BitVectorConcatExpression(new BinaryConstant("00000000"), DataIn_current)),
+            new EqualsExpression(WriteEnable_next, new BinaryConstant("1")),
+            new EqualsExpression(DataOut_next, A_current),
+            new EqualsExpression(State_next, CPUState.STA_ZPG_Cycle2.toBinaryConstant())
+            ))));
+    exprs.add(new Assertion(new Implication(
+        new EqualsExpression(State_current, CPUState.STA_ZPG_Cycle2.toBinaryConstant()),
+        new AndExpression(
+            preserveA(), preserveX(), preserveY(), preserveSP(), preserveP(),
+            fetchPC(), incrementPC(),
+            new EqualsExpression(State_next, CPUState.InstructionFetch.toBinaryConstant())
+            ))));
+    
+    // opcode 95: STA zeropage,x
+    // opcode 8D: STA absolute
+    // opcode 9D: STA absolute,x(w)
+    // opcode 99: STA absolute,y(w)
+    // opcode 81: STA indirect,x
+    // opcode 91: STA indirect,y(w)
+    
+    return exprs;
+  }
+  
 }

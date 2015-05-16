@@ -48,6 +48,8 @@ public enum CPUState {
   LDX_ABY_Cycle2(39), 
   LDX_ABY_Cycle2x(40), 
   LDX_ABY_Cycle3(41),
+  STA_ZPG_Cycle1(42),
+  STA_ZPG_Cycle2(43),
   ;
   
   private final int index;
