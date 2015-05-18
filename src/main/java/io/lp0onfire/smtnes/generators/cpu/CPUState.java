@@ -56,6 +56,10 @@ public enum CPUState {
   STA_ABS_Cycle1(47),
   STA_ABS_Cycle2(48),
   STA_ABS_Cycle3(49),
+  STA_ABX_Cycle1(50),
+  STA_ABX_Cycle2(51),
+  STA_ABX_Cycle3(52),
+  STA_ABX_Cycle4(53),
   ;
   
   private final int index;
