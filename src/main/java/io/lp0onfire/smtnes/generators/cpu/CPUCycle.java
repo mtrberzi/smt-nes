@@ -1418,6 +1418,64 @@ public class CPUCycle implements CodeGenerator {
             ))));
     
     // opcode 99: STA absolute,y(w)
+    // cycle 0: read [PC], increment PC
+    // cycle 1: CalcAddr[7:0] = DataIn, read [PC], increment PC
+    // cycle 2: read [DataIn ++ (CalcAddr[7:0] + Y)], CalcAddr = (DataIn ++ CalcAddr[7:0]) + Y
+    // cycle 3: write A to [CalcAddr]
+    // cycle 4: instruction fetch
+    exprs.add(new Assertion(new Implication(
+        new AndExpression(new EqualsExpression(State_current, CPUState.InstructionFetch.toBinaryConstant()),
+            new EqualsExpression(DataIn_current, new HexConstant("99"))), 
+        new AndExpression(
+            preserveA(), preserveX(), preserveY(), preserveSP(), preserveP(),
+            fetchPC(), incrementPC(),
+            new EqualsExpression(State_next, CPUState.STA_ABY_Cycle1.toBinaryConstant())
+            ))));
+    exprs.add(new Assertion(new Implication(
+        new EqualsExpression(State_current, CPUState.STA_ABY_Cycle1.toBinaryConstant()),
+        new AndExpression(
+            preserveA(), preserveX(), preserveY(), preserveSP(), preserveP(),
+            new EqualsExpression(new BitVectorExtractExpression(
+                CalcAddr_next, new Numeral("7"), new Numeral("0")), DataIn_current),
+            fetchPC(), incrementPC(),
+            new EqualsExpression(State_next, CPUState.STA_ABY_Cycle2.toBinaryConstant())
+            ))));
+    exprs.add(new Assertion(new Implication(
+        new EqualsExpression(State_current, CPUState.STA_ABY_Cycle2.toBinaryConstant()),
+        new AndExpression(
+            preserveA(), preserveX(), preserveY(), preserveSP(), preserveP(), preservePC(),
+            new EqualsExpression(AddressBus_next, new BitVectorConcatExpression(
+                DataIn_current, new BitVectorAddExpression(
+                    new BitVectorExtractExpression(CalcAddr_current, new Numeral("7"), new Numeral("0")), 
+                    Y_current)
+                )),
+            new EqualsExpression(CalcAddr_next, new BitVectorAddExpression(
+                new BitVectorConcatExpression(
+                    DataIn_current, 
+                    new BitVectorExtractExpression(CalcAddr_current, new Numeral("7"), new Numeral("0"))),
+                new BitVectorConcatExpression(new BinaryConstant("00000000"), Y_current)
+                )),
+            new EqualsExpression(WriteEnable_next, new BinaryConstant("0")),
+            new EqualsExpression(DataOut_next, new BinaryConstant("00000000")),
+            new EqualsExpression(State_next, CPUState.STA_ABY_Cycle3.toBinaryConstant())
+            ))));
+    exprs.add(new Assertion(new Implication(
+        new EqualsExpression(State_current, CPUState.STA_ABY_Cycle3.toBinaryConstant()),
+        new AndExpression(
+            preserveA(), preserveX(), preserveY(), preserveSP(), preserveP(), preservePC(),
+            new EqualsExpression(AddressBus_next, CalcAddr_current),
+            new EqualsExpression(WriteEnable_next, new BinaryConstant("1")),
+            new EqualsExpression(DataOut_next, A_current),
+            new EqualsExpression(State_next, CPUState.STA_ABY_Cycle4.toBinaryConstant())
+            ))));
+    exprs.add(new Assertion(new Implication(
+        new EqualsExpression(State_current, CPUState.STA_ABY_Cycle4.toBinaryConstant()),
+        new AndExpression(
+            preserveA(), preserveX(), preserveY(), preserveSP(), preserveP(),
+            fetchPC(), incrementPC(),
+            new EqualsExpression(State_next, CPUState.InstructionFetch.toBinaryConstant())
+            ))));
+    
     // opcode 81: STA indirect,x
     // opcode 91: STA indirect,y(w)
     
