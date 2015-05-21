@@ -73,7 +73,15 @@ public enum CPUState {
   STA_INY_Cycle2(64),
   STA_INY_Cycle3(65),
   STA_INY_Cycle4(66),
-  STA_INY_Cycle5(67),
+  STA_INY_Cycle5(67), 
+  STX_ZPG_Cycle1(68), 
+  STX_ZPG_Cycle2(69), 
+  STX_ZPY_Cycle1(70), 
+  STX_ZPY_Cycle2(71), 
+  STX_ZPY_Cycle3(72), 
+  STX_ABS_Cycle1(73), 
+  STX_ABS_Cycle2(74), 
+  STX_ABS_Cycle3(75),
   ;
   
   private final int index;
