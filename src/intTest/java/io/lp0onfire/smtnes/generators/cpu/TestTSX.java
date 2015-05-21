@@ -82,6 +82,20 @@ public class TestTSX {
     CodeGenerator initRAM = burner.getInitializer();
     exprs.addAll(reg.apply(initRAM));
     
+    CodeGenerator cpuCycle = new CPUCycle();
+    CodeGenerator verifyStateInstructionFetch = new VerifyCPUState(CPUState.InstructionFetch);
+    
+    // reset sequence
+    for (int i = 0; i < 8; ++i) {
+      exprs.addAll(reg.apply(cpuCycle));
+      exprs.addAll(reg.apply(memoryControllerFront));
+      exprs.addAll(reg.apply(nullPageHandler));
+      exprs.addAll(reg.apply(ramPageHandler));
+      exprs.addAll(reg.apply(memoryControllerBack));
+    }
+    exprs.addAll(reg.apply(verifyStateInstructionFetch));
+    
+    // we have to put this here because the reset sequence messes with the stack pointer
     exprs.addAll(reg.apply(new CodeGenerator(){
       @Override
       public Set<String> getStateVariablesRead() {
@@ -100,26 +114,13 @@ public class TestTSX {
           Map<String, Symbol> outputs) {
         List<SExpression> exprs = new LinkedList<>();
         
-        Symbol A = outputs.get("CPU_SP");
-        exprs.add(new BitVectorDeclaration(A, new Numeral("8")));
-        exprs.add(new Assertion(new EqualsExpression(A, new HexConstant("5A"))));
+        Symbol SP = outputs.get("CPU_SP");
+        exprs.add(new BitVectorDeclaration(SP, new Numeral("8")));
+        exprs.add(new Assertion(new EqualsExpression(SP, new HexConstant("5A"))));
         
         return exprs;
       }
     }));
-    
-    CodeGenerator cpuCycle = new CPUCycle();
-    CodeGenerator verifyStateInstructionFetch = new VerifyCPUState(CPUState.InstructionFetch);
-    
-    // reset sequence
-    for (int i = 0; i < 8; ++i) {
-      exprs.addAll(reg.apply(cpuCycle));
-      exprs.addAll(reg.apply(memoryControllerFront));
-      exprs.addAll(reg.apply(nullPageHandler));
-      exprs.addAll(reg.apply(ramPageHandler));
-      exprs.addAll(reg.apply(memoryControllerBack));
-    }
-    exprs.addAll(reg.apply(verifyStateInstructionFetch));
     
     // execute instruction
     // TAX takes 2 cycles
