@@ -90,6 +90,12 @@ public enum CPUState {
   STY_ABS_Cycle1(81), 
   STY_ABS_Cycle2(82), 
   STY_ABS_Cycle3(83),
+  TAX_IMP_Cycle1(84),
+  TAY_IMP_Cycle1(85),
+  TSX_IMP_Cycle1(86),
+  TXA_IMP_Cycle1(87),
+  TXS_IMP_Cycle1(88),
+  TYA_IMP_Cycle1(89),
   ;
   
   private final int index;
