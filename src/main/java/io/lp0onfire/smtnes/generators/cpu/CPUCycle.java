@@ -1477,6 +1477,87 @@ public class CPUCycle implements CodeGenerator {
             ))));
     
     // opcode 81: STA indirect,x
+    // cycle 0: read [PC], increment PC
+    // cycle 1: TmpAddr = $00 ++ DataIn, read [$00 ++ DataIn]
+    // cycle 2: discard DataIn, TmpAddr[7:0] += X (no overflow), read [TmpAddr_next]
+    // cycle 3: CalcAddr[7:0] = DataIn, TmpAddr[7:0] += 1 (no overflow), read [TmpAddr_next]
+    // cycle 4: CalcAddr[15:8] = DataIn, write A to [CalcAddr]
+    // cycle 5: instruction fetch
+    exprs.add(new Assertion(new Implication(
+        new AndExpression(new EqualsExpression(State_current, CPUState.InstructionFetch.toBinaryConstant()),
+            new EqualsExpression(DataIn_current, new HexConstant("81"))), 
+        new AndExpression(
+            preserveA(), preserveX(), preserveY(), preserveSP(), preserveP(),
+            fetchPC(), incrementPC(),
+            new EqualsExpression(State_next, CPUState.STA_INX_Cycle1.toBinaryConstant())
+            ))));
+    exprs.add(new Assertion(new Implication(
+        new EqualsExpression(State_current, CPUState.STA_INX_Cycle1.toBinaryConstant()),
+        new AndExpression(
+            preserveA(), preserveX(), preserveY(), preserveSP(), preserveP(), preservePC(),
+            new EqualsExpression(TmpAddr_next, new BitVectorConcatExpression(new BinaryConstant("00000000"), DataIn_current)),
+            new EqualsExpression(AddressBus_next, new BitVectorConcatExpression(new BinaryConstant("00000000"), DataIn_current)),
+            new EqualsExpression(WriteEnable_next, new BinaryConstant("0")),
+            new EqualsExpression(DataOut_next, new BinaryConstant("00000000")),
+            new EqualsExpression(State_next, CPUState.STA_INX_Cycle2.toBinaryConstant())
+            ))));
+    exprs.add(new Assertion(new Implication(
+        new EqualsExpression(State_current, CPUState.STA_INX_Cycle2.toBinaryConstant()),
+        new AndExpression(
+            preserveA(), preserveX(), preserveY(), preserveSP(), preserveP(), preservePC(),
+            new EqualsExpression(TmpAddr_next, 
+                new BitVectorConcatExpression(new BinaryConstant("00000000"), 
+                    new BitVectorAddExpression(
+                        new BitVectorExtractExpression(TmpAddr_current, new Numeral("7"), new Numeral("0")),
+                        X_current))
+            ),
+            new EqualsExpression(AddressBus_next, new BitVectorConcatExpression(new BinaryConstant("00000000"), 
+                    new BitVectorAddExpression(
+                        new BitVectorExtractExpression(TmpAddr_current, new Numeral("7"), new Numeral("0")),
+                        X_current))),
+            new EqualsExpression(WriteEnable_next, new BinaryConstant("0")),
+            new EqualsExpression(DataOut_next, new BinaryConstant("00000000")),
+            new EqualsExpression(State_next, CPUState.STA_INX_Cycle3.toBinaryConstant())
+            ))));
+    exprs.add(new Assertion(new Implication(
+        new EqualsExpression(State_current, CPUState.STA_INX_Cycle3.toBinaryConstant()),
+        new AndExpression(
+            preserveA(), preserveX(), preserveY(), preserveSP(), preserveP(), preservePC(),
+            new EqualsExpression(CalcAddr_next, new BitVectorConcatExpression(new BinaryConstant("00000000"), DataIn_current)),
+            new EqualsExpression(TmpAddr_next, 
+                new BitVectorConcatExpression(new BinaryConstant("00000000"), 
+                    new BitVectorAddExpression(
+                        new BitVectorExtractExpression(TmpAddr_current, new Numeral("7"), new Numeral("0")),
+                        new BinaryConstant("00000001")))
+            ),
+            new EqualsExpression(AddressBus_next, new BitVectorConcatExpression(new BinaryConstant("00000000"), 
+                    new BitVectorAddExpression(
+                        new BitVectorExtractExpression(TmpAddr_current, new Numeral("7"), new Numeral("0")),
+                        new BinaryConstant("00000001")))),
+            new EqualsExpression(WriteEnable_next, new BinaryConstant("0")),
+            new EqualsExpression(DataOut_next, new BinaryConstant("00000000")),
+            new EqualsExpression(State_next, CPUState.STA_INX_Cycle4.toBinaryConstant())
+            ))));
+    exprs.add(new Assertion(new Implication(
+        new EqualsExpression(State_current, CPUState.STA_INX_Cycle4.toBinaryConstant()),
+        new AndExpression(
+            preserveA(), preserveX(), preserveY(), preserveSP(), preserveP(), preservePC(),
+            new EqualsExpression(CalcAddr_next, new BitVectorConcatExpression(
+                DataIn_current, new BitVectorExtractExpression(CalcAddr_current, new Numeral("7"), new Numeral("0")))),
+            new EqualsExpression(AddressBus_next, new BitVectorConcatExpression(
+                DataIn_current, new BitVectorExtractExpression(CalcAddr_current, new Numeral("7"), new Numeral("0")))),
+            new EqualsExpression(WriteEnable_next, new BinaryConstant("1")),
+            new EqualsExpression(DataOut_next, A_current),
+            new EqualsExpression(State_next, CPUState.STA_INX_Cycle5.toBinaryConstant())
+            ))));
+    exprs.add(new Assertion(new Implication(
+        new EqualsExpression(State_current, CPUState.STA_INX_Cycle5.toBinaryConstant()),
+        new AndExpression(
+            preserveA(), preserveX(), preserveY(), preserveSP(), preserveP(), 
+            fetchPC(), incrementPC(),
+            new EqualsExpression(State_next, CPUState.InstructionFetch.toBinaryConstant())
+            ))));
+    
     // opcode 91: STA indirect,y(w)
     
     return exprs;
