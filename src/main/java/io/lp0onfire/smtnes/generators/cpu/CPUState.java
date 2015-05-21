@@ -82,6 +82,14 @@ public enum CPUState {
   STX_ABS_Cycle1(73), 
   STX_ABS_Cycle2(74), 
   STX_ABS_Cycle3(75),
+  STY_ZPG_Cycle1(76), 
+  STY_ZPG_Cycle2(77), 
+  STY_ZPX_Cycle1(78), 
+  STY_ZPX_Cycle2(79), 
+  STY_ZPX_Cycle3(80), 
+  STY_ABS_Cycle1(81), 
+  STY_ABS_Cycle2(82), 
+  STY_ABS_Cycle3(83),
   ;
   
   private final int index;
