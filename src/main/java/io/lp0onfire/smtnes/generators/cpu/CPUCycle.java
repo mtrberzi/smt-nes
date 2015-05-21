@@ -171,6 +171,12 @@ public class CPUCycle implements CodeGenerator {
     exprs.addAll(instruction_STA());
     exprs.addAll(instruction_STX());
     exprs.addAll(instruction_STY());
+    exprs.addAll(instruction_TAX());
+    exprs.addAll(instruction_TAY());
+    exprs.addAll(instruction_TSX());
+    exprs.addAll(instruction_TXA());
+    exprs.addAll(instruction_TXS());
+    exprs.addAll(instruction_TYA());
     
     return exprs;
   }
@@ -1879,6 +1885,156 @@ public class CPUCycle implements CodeGenerator {
             ))));
     
     return exprs;
+  }
+  
+  private enum RegisterTransferTarget {
+    REGISTER_A, REGISTER_X, REGISTER_Y, REGISTER_SP
+  };
+  
+  // helper function for register transfer instructions
+  private List<SExpression> generateRegisterTransfer(String opcode, 
+      RegisterTransferTarget src, RegisterTransferTarget dst, 
+      CPUState cycle1State) {
+    
+    if (src.equals(dst)) {
+      throw new IllegalArgumentException("cannot transfer from a register to itself");
+    }
+    
+    Symbol src_current;
+    switch (src) {
+    case REGISTER_A:
+      src_current = A_current;
+      break;
+    case REGISTER_SP:
+      src_current = SP_current;
+      break;
+    case REGISTER_X:
+      src_current = X_current;
+      break;
+    case REGISTER_Y:
+      src_current = Y_current;
+      break;
+    default:
+      throw new IllegalArgumentException("unexpected source register " + src);
+    }
+    Symbol dst_next;
+    switch (dst) {
+    case REGISTER_A:
+      dst_next = A_next;
+      break;
+    case REGISTER_SP:
+      dst_next = SP_next;
+      break;
+    case REGISTER_X:
+      dst_next = X_next;
+      break;
+    case REGISTER_Y:
+      dst_next = Y_next;
+      break;
+    default:
+      throw new IllegalArgumentException("unexpected destination register " + dst);
+    }
+    
+    // figure out which of A, X, Y, and SP need to be preserved
+    SExpression[] preservedRegisters = new SExpression[3];
+    int i = 0;
+    if (dst != RegisterTransferTarget.REGISTER_A) {
+      preservedRegisters[i] = preserveA();
+      i += 1;
+    }
+    if (dst != RegisterTransferTarget.REGISTER_X) {
+      preservedRegisters[i] = preserveX();
+      i += 1;
+    }
+    if (dst != RegisterTransferTarget.REGISTER_Y) {
+      preservedRegisters[i] = preserveY();
+      i += 1;
+    }
+    if (dst != RegisterTransferTarget.REGISTER_SP) {
+      preservedRegisters[i] = preserveSP();
+      i += 1;
+    }
+    SExpression preserveOtherRegisters = new AndExpression(preservedRegisters);
+    
+    List<SExpression> exprs = new LinkedList<>();
+    
+    // cycle 0: read [PC]
+    // cycle 1: discard DataIn; dst_next = src_current,
+    // P[Z] = (src_current == 0), P[N] = (src_current[7] == 1), instruction fetch
+    
+    exprs.add(new Assertion(new Implication(
+        new AndExpression(new EqualsExpression(State_current, CPUState.InstructionFetch.toBinaryConstant()),
+            new EqualsExpression(DataIn_current, new HexConstant(opcode))), 
+        new AndExpression(
+            preserveA(), preserveX(), preserveY(), preserveSP(), preserveP(), preservePC(),
+            fetchPC(),
+            new EqualsExpression(State_next, cycle1State.toBinaryConstant())
+            ))));
+    SExpression updateP = new EqualsExpression(P_next, new BitVectorConcatExpression(
+        new BitVectorConcatExpression(
+        // 7 P[Z]
+            new ConditionalExpression(
+                new EqualsExpression(src_current, new BinaryConstant("00000000")), 
+                new BinaryConstant("1"), new BinaryConstant("0")),
+        // 6 downto 2
+            new BitVectorExtractExpression(P_current, new Numeral("6"), new Numeral("2"))
+            ),
+        new BitVectorConcatExpression(
+        // 1 P[N]
+            new ConditionalExpression(
+                new EqualsExpression(new BitVectorExtractExpression(src_current, new Numeral("7"), new Numeral("7")), 
+                    new BinaryConstant("1")), 
+                new BinaryConstant("1"), new BinaryConstant("0")),
+        // 0
+            new BitVectorExtractExpression(P_current, new Numeral("0"), new Numeral("0"))
+            )
+        ));
+    exprs.add(new Assertion(new Implication(
+        new EqualsExpression(State_current, cycle1State.toBinaryConstant()),
+        new AndExpression(
+            new EqualsExpression(dst_next, src_current), 
+            preserveOtherRegisters,
+            updateP,
+            fetchPC(), incrementPC(),
+            new EqualsExpression(State_next, CPUState.InstructionFetch.toBinaryConstant())))));
+    
+    return exprs;
+  }
+  
+  private List<SExpression> instruction_TAX() {
+    return generateRegisterTransfer("AA", 
+        RegisterTransferTarget.REGISTER_A, RegisterTransferTarget.REGISTER_X,
+        CPUState.TAX_IMP_Cycle1);
+  }
+  
+  private List<SExpression> instruction_TAY() {
+    return generateRegisterTransfer("A8", 
+        RegisterTransferTarget.REGISTER_A, RegisterTransferTarget.REGISTER_Y,
+        CPUState.TAY_IMP_Cycle1);
+  }
+  
+  private List<SExpression> instruction_TSX() {
+    return generateRegisterTransfer("BA", 
+        RegisterTransferTarget.REGISTER_SP, RegisterTransferTarget.REGISTER_X,
+        CPUState.TSX_IMP_Cycle1);
+  }
+  
+  private List<SExpression> instruction_TXA() {
+    return generateRegisterTransfer("8A", 
+        RegisterTransferTarget.REGISTER_X, RegisterTransferTarget.REGISTER_A,
+        CPUState.TXA_IMP_Cycle1);
+  }
+  
+  private List<SExpression> instruction_TXS() {
+    return generateRegisterTransfer("9A", 
+        RegisterTransferTarget.REGISTER_X, RegisterTransferTarget.REGISTER_SP,
+        CPUState.TXS_IMP_Cycle1);
+  }
+  
+  private List<SExpression> instruction_TYA() {
+    return generateRegisterTransfer("98", 
+        RegisterTransferTarget.REGISTER_Y, RegisterTransferTarget.REGISTER_A,
+        CPUState.TYA_IMP_Cycle1);
   }
   
 }
