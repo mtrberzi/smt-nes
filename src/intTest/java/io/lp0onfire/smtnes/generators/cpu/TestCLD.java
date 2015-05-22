@@ -42,7 +42,7 @@ public class TestCLD {
   }
   
   @Test(timeout=60 * 1000)
-  public void testCLC() throws IOException {
+  public void testCLD() throws IOException {
     // opcode D8
     
     // run the program

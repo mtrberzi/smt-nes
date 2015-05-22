@@ -42,7 +42,7 @@ public class TestCLI {
   }
   
   @Test(timeout=60 * 1000)
-  public void testCLC() throws IOException {
+  public void testCLI() throws IOException {
     // opcode 58
     
     // run the program
