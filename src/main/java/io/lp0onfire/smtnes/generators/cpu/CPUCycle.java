@@ -172,6 +172,9 @@ public class CPUCycle implements CodeGenerator {
     exprs.addAll(instruction_CLV());
     exprs.addAll(instruction_LDA());
     exprs.addAll(instruction_LDX());
+    exprs.addAll(instruction_SEC());
+    exprs.addAll(instruction_SED());
+    exprs.addAll(instruction_SEI());
     exprs.addAll(instruction_STA());
     exprs.addAll(instruction_STX());
     exprs.addAll(instruction_STY());
@@ -1310,6 +1313,18 @@ public class CPUCycle implements CodeGenerator {
             ))));
     
     return exprs;
+  }
+  
+  private List<SExpression> instruction_SEC() {
+    return generateStatusFlagChange("38", 0, true, CPUState.SEC_IMP_Cycle1);
+  }
+  
+  private List<SExpression> instruction_SED() {
+    return generateStatusFlagChange("F8", 3, true, CPUState.SED_IMP_Cycle1);
+  }
+  
+  private List<SExpression> instruction_SEI() {
+    return generateStatusFlagChange("78", 2, true, CPUState.SEI_IMP_Cycle1);
   }
   
   private List<SExpression> instruction_STA() {
