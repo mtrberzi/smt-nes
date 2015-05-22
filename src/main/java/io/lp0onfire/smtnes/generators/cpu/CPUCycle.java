@@ -167,6 +167,9 @@ public class CPUCycle implements CodeGenerator {
     
     exprs.addAll(handleReset());
     exprs.addAll(instruction_CLC());
+    exprs.addAll(instruction_CLD());
+    exprs.addAll(instruction_CLI());
+    exprs.addAll(instruction_CLV());
     exprs.addAll(instruction_LDA());
     exprs.addAll(instruction_LDX());
     exprs.addAll(instruction_STA());
@@ -299,6 +302,7 @@ public class CPUCycle implements CodeGenerator {
     return exprs;
   }
   
+  // P: 7 - N V s s D I Z C - 0
   private List<SExpression> generateStatusFlagChange(String opcode, 
       int bitPosition, boolean newValue,
       CPUState cycle1State) {
@@ -345,6 +349,18 @@ public class CPUCycle implements CodeGenerator {
   
   private List<SExpression> instruction_CLC() {
     return generateStatusFlagChange("18", 0, false, CPUState.CLC_IMP_Cycle1);
+  }
+  
+  private List<SExpression> instruction_CLD() {
+    return generateStatusFlagChange("D8", 3, false, CPUState.CLD_IMP_Cycle1);
+  }
+  
+  private List<SExpression> instruction_CLI() {
+    return generateStatusFlagChange("58", 2, false, CPUState.CLI_IMP_Cycle1);
+  }
+  
+  private List<SExpression> instruction_CLV() {
+    return generateStatusFlagChange("B8", 6, false, CPUState.CLV_IMP_Cycle1);
   }
   
   private List<SExpression> instruction_LDA() {
