@@ -166,6 +166,7 @@ public class CPUCycle implements CodeGenerator {
     exprs.add(new BitVectorDeclaration(State_next, new Numeral(Integer.toString(CPUState.getStateWidth()))));
     
     exprs.addAll(handleReset());
+    exprs.addAll(instruction_CLC());
     exprs.addAll(instruction_LDA());
     exprs.addAll(instruction_LDX());
     exprs.addAll(instruction_STA());
@@ -296,6 +297,54 @@ public class CPUCycle implements CodeGenerator {
         ))));
     
     return exprs;
+  }
+  
+  private List<SExpression> generateStatusFlagChange(String opcode, 
+      int bitPosition, boolean newValue,
+      CPUState cycle1State) {
+    List<SExpression> exprs = new LinkedList<>();
+    
+    // cycle 0: read [PC]
+    // cycle 1: discard DataIn; P[bit#] = value, instruction fetch
+    
+    exprs.add(new Assertion(new Implication(
+        new AndExpression(new EqualsExpression(State_current, CPUState.InstructionFetch.toBinaryConstant()),
+            new EqualsExpression(DataIn_current, new HexConstant(opcode))), 
+        new AndExpression(
+            preserveA(), preserveX(), preserveY(), preserveSP(), preserveP(), preservePC(),
+            fetchPC(),
+            new EqualsExpression(State_next, cycle1State.toBinaryConstant())
+            ))));
+    
+    SExpression[] updateBits = new SExpression[8];
+    for (Integer i = 0; i < 8; ++i) {
+      Numeral idx = new Numeral(i.toString());
+      SExpression bitToRead = new BitVectorExtractExpression(P_current, idx, idx);
+      SExpression bitToWrite = new BitVectorExtractExpression(P_next, idx, idx);
+      if (i == bitPosition) {
+        // use new value instead
+        BinaryConstant val = (newValue ? new BinaryConstant("1") : new BinaryConstant("0"));
+        updateBits[i] = new EqualsExpression(bitToWrite, val);
+      } else {
+        // use old value
+        updateBits[i] = new EqualsExpression(bitToWrite, bitToRead);
+      }
+    }
+    SExpression updateP = new AndExpression(updateBits);
+    
+    exprs.add(new Assertion(new Implication(
+        new EqualsExpression(State_current, cycle1State.toBinaryConstant()),
+        new AndExpression( 
+            preserveA(), preserveX(), preserveY(), preserveSP(),
+            updateP,
+            fetchPC(), incrementPC(),
+            new EqualsExpression(State_next, CPUState.InstructionFetch.toBinaryConstant())))));
+    
+    return exprs;
+  }
+  
+  private List<SExpression> instruction_CLC() {
+    return generateStatusFlagChange("18", 0, false, CPUState.CLC_IMP_Cycle1);
   }
   
   private List<SExpression> instruction_LDA() {
