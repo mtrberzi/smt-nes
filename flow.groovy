@@ -14,11 +14,19 @@ branches["check"] = {
     step([$class: 'JUnitResultArchiver', testResults: 'build/test-results/*.xml'])
   }
 }
-branches["intTestAll"] = {
+branches["intTestCPU"] = {
   node('z3') {
     sh 'rm -rf *'
     unarchive mapping: ['build.gradle' : '.', 'src/' : '.']
-    sh "gradle intTest"
+    sh "gradle -DintTest.single=io/lp0onfire/smtnes/generators/cpu/ intTest"
+    step([$class: 'JUnitResultArchiver', testResults: 'build/test-results/*.xml'])
+  }
+}
+branches["intTestMappers"] = {
+  node('z3') {
+    sh 'rm -rf *'
+    unarchive mapping: ['build.gradle' : '.', 'src/' : '.']
+    sh "gradle -DintTest.single=io/lp0onfire/smtnes/generators/mappers/ intTest"
     step([$class: 'JUnitResultArchiver', testResults: 'build/test-results/*.xml'])
   }
 }
