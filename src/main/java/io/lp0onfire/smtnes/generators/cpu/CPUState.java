@@ -103,6 +103,10 @@ public enum CPUState {
   SEC_IMP_Cycle1(94),
   SED_IMP_Cycle1(95),
   SEI_IMP_Cycle1(96),
+  INX_IMP_Cycle1(97),
+  INY_IMP_Cycle1(98),
+  DEX_IMP_Cycle1(99),
+  DEY_IMP_Cycle1(100),
   ;
   
   private final int index;
