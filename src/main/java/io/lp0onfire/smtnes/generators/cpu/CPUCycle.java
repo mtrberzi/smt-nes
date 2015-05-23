@@ -170,6 +170,10 @@ public class CPUCycle implements CodeGenerator {
     exprs.addAll(instruction_CLD());
     exprs.addAll(instruction_CLI());
     exprs.addAll(instruction_CLV());
+    exprs.addAll(instruction_DEX());
+    exprs.addAll(instruction_DEY());
+    exprs.addAll(instruction_INX());
+    exprs.addAll(instruction_INY());
     exprs.addAll(instruction_LDA());
     exprs.addAll(instruction_LDX());
     exprs.addAll(instruction_SEC());
@@ -364,6 +368,190 @@ public class CPUCycle implements CodeGenerator {
   
   private List<SExpression> instruction_CLV() {
     return generateStatusFlagChange("B8", 6, false, CPUState.CLV_IMP_Cycle1);
+  }
+
+  private List<SExpression> instruction_DEX() {
+    // opcode CA
+    List<SExpression> exprs = new LinkedList<>();
+    
+    exprs.add(new Assertion(new Implication(
+        new AndExpression(new EqualsExpression(State_current, CPUState.InstructionFetch.toBinaryConstant()),
+            new EqualsExpression(DataIn_current, new HexConstant("CA"))), 
+        new AndExpression(
+            preserveA(), preserveX(), preserveY(), preserveSP(), preserveP(), preservePC(),
+            fetchPC(),
+            new EqualsExpression(State_next, CPUState.DEX_IMP_Cycle1.toBinaryConstant())
+            ))));
+    
+    SExpression xNext = new BitVectorSubtractExpression(X_current, new HexConstant("01"));
+    
+    exprs.add(new Assertion(new Implication(
+        new EqualsExpression(State_current, CPUState.DEX_IMP_Cycle1.toBinaryConstant()),
+        new AndExpression(
+            preserveA(), preserveY(), preserveSP(),
+            new EqualsExpression(X_next, xNext),
+            new EqualsExpression(P_next, new BitVectorConcatExpression(
+                new BitVectorConcatExpression(
+                // 7 P[Z]
+                    new ConditionalExpression(
+                        new EqualsExpression(xNext, new BinaryConstant("00000000")), 
+                        new BinaryConstant("1"), new BinaryConstant("0")),
+                // 6 downto 2
+                    new BitVectorExtractExpression(P_current, new Numeral("6"), new Numeral("2"))
+                    ),
+                new BitVectorConcatExpression(
+                // 1 P[N]
+                    new ConditionalExpression(
+                        new EqualsExpression(new BitVectorExtractExpression(xNext, new Numeral("7"), new Numeral("7")), 
+                            new BinaryConstant("1")), 
+                        new BinaryConstant("1"), new BinaryConstant("0")),
+                // 0
+                    new BitVectorExtractExpression(P_current, new Numeral("0"), new Numeral("0"))
+                    )
+                )),
+            fetchPC(), incrementPC(),
+            new EqualsExpression(State_next, CPUState.InstructionFetch.toBinaryConstant())
+            ))));
+    
+    return exprs;
+  }
+  
+  private List<SExpression> instruction_DEY() {
+    // opcode 88
+    List<SExpression> exprs = new LinkedList<>();
+    
+    exprs.add(new Assertion(new Implication(
+        new AndExpression(new EqualsExpression(State_current, CPUState.InstructionFetch.toBinaryConstant()),
+            new EqualsExpression(DataIn_current, new HexConstant("88"))), 
+        new AndExpression(
+            preserveA(), preserveX(), preserveY(), preserveSP(), preserveP(), preservePC(),
+            fetchPC(),
+            new EqualsExpression(State_next, CPUState.DEY_IMP_Cycle1.toBinaryConstant())
+            ))));
+    
+    SExpression yNext = new BitVectorSubtractExpression(Y_current, new HexConstant("01"));
+    
+    exprs.add(new Assertion(new Implication(
+        new EqualsExpression(State_current, CPUState.DEY_IMP_Cycle1.toBinaryConstant()),
+        new AndExpression(
+            preserveA(), preserveX(), preserveSP(),
+            new EqualsExpression(Y_next, yNext),
+            new EqualsExpression(P_next, new BitVectorConcatExpression(
+                new BitVectorConcatExpression(
+                // 7 P[Z]
+                    new ConditionalExpression(
+                        new EqualsExpression(yNext, new BinaryConstant("00000000")), 
+                        new BinaryConstant("1"), new BinaryConstant("0")),
+                // 6 downto 2
+                    new BitVectorExtractExpression(P_current, new Numeral("6"), new Numeral("2"))
+                    ),
+                new BitVectorConcatExpression(
+                // 1 P[N]
+                    new ConditionalExpression(
+                        new EqualsExpression(new BitVectorExtractExpression(yNext, new Numeral("7"), new Numeral("7")), 
+                            new BinaryConstant("1")), 
+                        new BinaryConstant("1"), new BinaryConstant("0")),
+                // 0
+                    new BitVectorExtractExpression(P_current, new Numeral("0"), new Numeral("0"))
+                    )
+                )),
+            fetchPC(), incrementPC(),
+            new EqualsExpression(State_next, CPUState.InstructionFetch.toBinaryConstant())
+            ))));
+    
+    return exprs;
+  }
+  
+  private List<SExpression> instruction_INX() {
+    // opcode E8
+    List<SExpression> exprs = new LinkedList<>();
+    
+    exprs.add(new Assertion(new Implication(
+        new AndExpression(new EqualsExpression(State_current, CPUState.InstructionFetch.toBinaryConstant()),
+            new EqualsExpression(DataIn_current, new HexConstant("E8"))), 
+        new AndExpression(
+            preserveA(), preserveX(), preserveY(), preserveSP(), preserveP(), preservePC(),
+            fetchPC(),
+            new EqualsExpression(State_next, CPUState.INX_IMP_Cycle1.toBinaryConstant())
+            ))));
+    
+    SExpression xNext = new BitVectorAddExpression(X_current, new HexConstant("01"));
+    
+    exprs.add(new Assertion(new Implication(
+        new EqualsExpression(State_current, CPUState.INX_IMP_Cycle1.toBinaryConstant()),
+        new AndExpression(
+            preserveA(), preserveY(), preserveSP(),
+            new EqualsExpression(X_next, xNext),
+            new EqualsExpression(P_next, new BitVectorConcatExpression(
+                new BitVectorConcatExpression(
+                // 7 P[Z]
+                    new ConditionalExpression(
+                        new EqualsExpression(xNext, new BinaryConstant("00000000")), 
+                        new BinaryConstant("1"), new BinaryConstant("0")),
+                // 6 downto 2
+                    new BitVectorExtractExpression(P_current, new Numeral("6"), new Numeral("2"))
+                    ),
+                new BitVectorConcatExpression(
+                // 1 P[N]
+                    new ConditionalExpression(
+                        new EqualsExpression(new BitVectorExtractExpression(xNext, new Numeral("7"), new Numeral("7")), 
+                            new BinaryConstant("1")), 
+                        new BinaryConstant("1"), new BinaryConstant("0")),
+                // 0
+                    new BitVectorExtractExpression(P_current, new Numeral("0"), new Numeral("0"))
+                    )
+                )),
+            fetchPC(), incrementPC(),
+            new EqualsExpression(State_next, CPUState.InstructionFetch.toBinaryConstant())
+            ))));
+    
+    return exprs;
+  }
+  
+  private List<SExpression> instruction_INY() {
+    // opcode C8
+    List<SExpression> exprs = new LinkedList<>();
+    
+    exprs.add(new Assertion(new Implication(
+        new AndExpression(new EqualsExpression(State_current, CPUState.InstructionFetch.toBinaryConstant()),
+            new EqualsExpression(DataIn_current, new HexConstant("C8"))), 
+        new AndExpression(
+            preserveA(), preserveX(), preserveY(), preserveSP(), preserveP(), preservePC(),
+            fetchPC(),
+            new EqualsExpression(State_next, CPUState.INY_IMP_Cycle1.toBinaryConstant())
+            ))));
+    
+    SExpression yNext = new BitVectorAddExpression(Y_current, new HexConstant("01"));
+    
+    exprs.add(new Assertion(new Implication(
+        new EqualsExpression(State_current, CPUState.INY_IMP_Cycle1.toBinaryConstant()),
+        new AndExpression(
+            preserveA(), preserveX(), preserveSP(),
+            new EqualsExpression(Y_next, yNext),
+            new EqualsExpression(P_next, new BitVectorConcatExpression(
+                new BitVectorConcatExpression(
+                // 7 P[Z]
+                    new ConditionalExpression(
+                        new EqualsExpression(yNext, new BinaryConstant("00000000")), 
+                        new BinaryConstant("1"), new BinaryConstant("0")),
+                // 6 downto 2
+                    new BitVectorExtractExpression(P_current, new Numeral("6"), new Numeral("2"))
+                    ),
+                new BitVectorConcatExpression(
+                // 1 P[N]
+                    new ConditionalExpression(
+                        new EqualsExpression(new BitVectorExtractExpression(yNext, new Numeral("7"), new Numeral("7")), 
+                            new BinaryConstant("1")), 
+                        new BinaryConstant("1"), new BinaryConstant("0")),
+                // 0
+                    new BitVectorExtractExpression(P_current, new Numeral("0"), new Numeral("0"))
+                    )
+                )),
+            fetchPC(), incrementPC(),
+            new EqualsExpression(State_next, CPUState.InstructionFetch.toBinaryConstant())
+            ))));
+    
+    return exprs;
   }
   
   private List<SExpression> instruction_LDA() {
