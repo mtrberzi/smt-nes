@@ -189,7 +189,8 @@ public class TestAND {
     // $0000: A5 10  AND $10
     // ...
     // $0010: 2A
-    // and expect to see $10 in register A
+    // with A = $0F
+    // and expect to see $0A in register A
     
     List<SExpression> exprs = new LinkedList<>();
     StateVariableRegistry reg = new StateVariableRegistry();
@@ -237,6 +238,32 @@ public class TestAND {
     }
     exprs.addAll(reg.apply(verifyStateInstructionFetch));
     
+    exprs.addAll(reg.apply(new CodeGenerator(){
+      @Override
+      public Set<String> getStateVariablesRead() {
+        return new HashSet<>();
+      }
+
+      @Override
+      public Set<String> getStateVariablesWritten() {
+        return new HashSet<String>(Arrays.asList(new String[]{
+            "CPU_A"
+        }));
+      }
+
+      @Override
+      public List<SExpression> generateCode(Map<String, Symbol> inputs,
+          Map<String, Symbol> outputs) {
+        List<SExpression> exprs = new LinkedList<>();
+        
+        Symbol A = outputs.get("CPU_A");
+        exprs.add(new BitVectorDeclaration(A, new Numeral("8")));
+        exprs.add(new Assertion(new EqualsExpression(A, new HexConstant("0F"))));
+        
+        return exprs;
+      }
+    }));
+    
     // execute instruction
     // AND zero-page takes 3 cycles
     
@@ -248,7 +275,7 @@ public class TestAND {
       exprs.addAll(reg.apply(memoryControllerBack));
     }
     
-    // check that A = $2A
+    // check that A = $0A
     CodeGenerator verifyA = new CodeGenerator() {
 
       @Override
@@ -269,7 +296,7 @@ public class TestAND {
         List<SExpression> exprs = new LinkedList<>();
         
         Symbol A = inputs.get("CPU_A");
-        exprs.add(new EqualsExpression(A, new HexConstant("2A")));
+        exprs.add(new EqualsExpression(A, new HexConstant("0A")));
         
         return exprs;
       }
@@ -309,11 +336,11 @@ public class TestAND {
     // opcode B5
     
     // run the program
-    // $0000: B5 11
+    // $0000: B5 11  AND $11,X
     // ...
-    // $0018: 53
-    // with X = $07
-    // and expect to see $53 in A
+    // $0018: 5A
+    // with X = $07, A = $0F
+    // and expect to see $0A in A
     
     List<SExpression> exprs = new LinkedList<>();
     StateVariableRegistry reg = new StateVariableRegistry();
@@ -375,6 +402,32 @@ public class TestAND {
       }
     }));
     
+    exprs.addAll(reg.apply(new CodeGenerator(){
+      @Override
+      public Set<String> getStateVariablesRead() {
+        return new HashSet<>();
+      }
+
+      @Override
+      public Set<String> getStateVariablesWritten() {
+        return new HashSet<String>(Arrays.asList(new String[]{
+            "CPU_A"
+        }));
+      }
+
+      @Override
+      public List<SExpression> generateCode(Map<String, Symbol> inputs,
+          Map<String, Symbol> outputs) {
+        List<SExpression> exprs = new LinkedList<>();
+        
+        Symbol A = outputs.get("CPU_A");
+        exprs.add(new BitVectorDeclaration(A, new Numeral("8")));
+        exprs.add(new Assertion(new EqualsExpression(A, new HexConstant("0F"))));
+        
+        return exprs;
+      }
+    }));
+    
     CodeGenerator cpuCycle = new CPUCycle();
     CodeGenerator verifyStateInstructionFetch = new VerifyCPUState(CPUState.InstructionFetch);
     
@@ -420,7 +473,7 @@ public class TestAND {
         List<SExpression> exprs = new LinkedList<>();
         
         Symbol A = inputs.get("CPU_A");
-        exprs.add(new EqualsExpression(A, new HexConstant("53")));
+        exprs.add(new EqualsExpression(A, new HexConstant("0A")));
         
         return exprs;
       }
@@ -462,8 +515,9 @@ public class TestAND {
     // run the program
     // $0000: AD 2A 03  AND $032A
     // ...
-    // $032A: E2
-    // and expect to see $E2 in A
+    // $032A: 5A
+    // with A = $0F
+    // and expect to see $0A in A
     
     List<SExpression> exprs = new LinkedList<>();
     StateVariableRegistry reg = new StateVariableRegistry();
@@ -472,7 +526,7 @@ public class TestAND {
     burner.write(0x000, 0x2D);
     burner.write(0x001, 0x2A);
     burner.write(0x002, 0x03);
-    burner.write(0x32A, 0xE2);
+    burner.write(0x32A, 0x5A);
     // reset vector
     burner.write(0xFFD, 0x00); // high byte
     burner.write(0xFFC, 0x00); // low byte
@@ -512,6 +566,32 @@ public class TestAND {
     }
     exprs.addAll(reg.apply(verifyStateInstructionFetch));
     
+    exprs.addAll(reg.apply(new CodeGenerator(){
+      @Override
+      public Set<String> getStateVariablesRead() {
+        return new HashSet<>();
+      }
+
+      @Override
+      public Set<String> getStateVariablesWritten() {
+        return new HashSet<String>(Arrays.asList(new String[]{
+            "CPU_A"
+        }));
+      }
+
+      @Override
+      public List<SExpression> generateCode(Map<String, Symbol> inputs,
+          Map<String, Symbol> outputs) {
+        List<SExpression> exprs = new LinkedList<>();
+        
+        Symbol A = outputs.get("CPU_A");
+        exprs.add(new BitVectorDeclaration(A, new Numeral("8")));
+        exprs.add(new Assertion(new EqualsExpression(A, new HexConstant("0F"))));
+        
+        return exprs;
+      }
+    }));
+    
     // execute instruction
     // AND absolute takes 4 cycles
     
@@ -544,7 +624,7 @@ public class TestAND {
         List<SExpression> exprs = new LinkedList<>();
         
         Symbol A = inputs.get("CPU_A");
-        exprs.add(new EqualsExpression(A, new HexConstant("E2")));
+        exprs.add(new EqualsExpression(A, new HexConstant("0A")));
         
         return exprs;
       }
@@ -585,8 +665,8 @@ public class TestAND {
     // run the program
     // $0000: BD 20 03 AND $0320,X
     // ...
-    // $032A: 49
-    // with X = $0A
+    // $032A: 5A
+    // with X = $0A, A = $0F
     // and expect to see $49 in A
     
     List<SExpression> exprs = new LinkedList<>();
@@ -596,7 +676,7 @@ public class TestAND {
     burner.write(0x000, 0x3D);
     burner.write(0x001, 0x20);
     burner.write(0x002, 0x03);
-    burner.write(0x32A, 0x49);
+    burner.write(0x32A, 0x5A);
     // reset vector
     burner.write(0xFFD, 0x00); // high byte
     burner.write(0xFFC, 0x00); // low byte
@@ -663,6 +743,32 @@ public class TestAND {
     }
     exprs.addAll(reg.apply(verifyStateInstructionFetch));
     
+    exprs.addAll(reg.apply(new CodeGenerator(){
+      @Override
+      public Set<String> getStateVariablesRead() {
+        return new HashSet<>();
+      }
+
+      @Override
+      public Set<String> getStateVariablesWritten() {
+        return new HashSet<String>(Arrays.asList(new String[]{
+            "CPU_A"
+        }));
+      }
+
+      @Override
+      public List<SExpression> generateCode(Map<String, Symbol> inputs,
+          Map<String, Symbol> outputs) {
+        List<SExpression> exprs = new LinkedList<>();
+        
+        Symbol A = outputs.get("CPU_A");
+        exprs.add(new BitVectorDeclaration(A, new Numeral("8")));
+        exprs.add(new Assertion(new EqualsExpression(A, new HexConstant("0F"))));
+        
+        return exprs;
+      }
+    }));
+    
     // execute instruction
     // AND absolute,x takes 4 cycles if the page is not crossed
     
@@ -695,7 +801,7 @@ public class TestAND {
         List<SExpression> exprs = new LinkedList<>();
         
         Symbol A = inputs.get("CPU_A");
-        exprs.add(new EqualsExpression(A, new HexConstant("49")));
+        exprs.add(new EqualsExpression(A, new HexConstant("0A")));
         
         return exprs;
       }
@@ -736,9 +842,9 @@ public class TestAND {
     // run the program
     // $0000: B9 20 03 AND $0320,Y
     // ...
-    // $032A: 49
-    // with Y = $0A
-    // and expect to see $49 in A
+    // $032A: 5A
+    // with Y = $0A, A = $0F
+    // and expect to see $0A in A
     
     List<SExpression> exprs = new LinkedList<>();
     StateVariableRegistry reg = new StateVariableRegistry();
@@ -747,7 +853,7 @@ public class TestAND {
     burner.write(0x000, 0x39);
     burner.write(0x001, 0x20);
     burner.write(0x002, 0x03);
-    burner.write(0x32A, 0x49);
+    burner.write(0x32A, 0x5A);
     // reset vector
     burner.write(0xFFD, 0x00); // high byte
     burner.write(0xFFC, 0x00); // low byte
@@ -814,6 +920,32 @@ public class TestAND {
     }
     exprs.addAll(reg.apply(verifyStateInstructionFetch));
     
+    exprs.addAll(reg.apply(new CodeGenerator(){
+      @Override
+      public Set<String> getStateVariablesRead() {
+        return new HashSet<>();
+      }
+
+      @Override
+      public Set<String> getStateVariablesWritten() {
+        return new HashSet<String>(Arrays.asList(new String[]{
+            "CPU_A"
+        }));
+      }
+
+      @Override
+      public List<SExpression> generateCode(Map<String, Symbol> inputs,
+          Map<String, Symbol> outputs) {
+        List<SExpression> exprs = new LinkedList<>();
+        
+        Symbol A = outputs.get("CPU_A");
+        exprs.add(new BitVectorDeclaration(A, new Numeral("8")));
+        exprs.add(new Assertion(new EqualsExpression(A, new HexConstant("0F"))));
+        
+        return exprs;
+      }
+    }));
+    
     // execute instruction
     // AND absolute,y takes 4 cycles if the page is not crossed
     
@@ -846,7 +978,7 @@ public class TestAND {
         List<SExpression> exprs = new LinkedList<>();
         
         Symbol A = inputs.get("CPU_A");
-        exprs.add(new EqualsExpression(A, new HexConstant("49")));
+        exprs.add(new EqualsExpression(A, new HexConstant("0A")));
         
         return exprs;
       }
@@ -889,9 +1021,9 @@ public class TestAND {
     // ...
     // $0032: 76 05
     // ...
-    // $0576: D4
-    // with X = $12
-    // and expect to see A = $D4
+    // $0576: 5A
+    // with X = $12, A = $0F
+    // and expect to see A = $0A
     
     List<SExpression> exprs = new LinkedList<>();
     StateVariableRegistry reg = new StateVariableRegistry();
@@ -968,6 +1100,32 @@ public class TestAND {
     }
     exprs.addAll(reg.apply(verifyStateInstructionFetch));
     
+    exprs.addAll(reg.apply(new CodeGenerator(){
+      @Override
+      public Set<String> getStateVariablesRead() {
+        return new HashSet<>();
+      }
+
+      @Override
+      public Set<String> getStateVariablesWritten() {
+        return new HashSet<String>(Arrays.asList(new String[]{
+            "CPU_A"
+        }));
+      }
+
+      @Override
+      public List<SExpression> generateCode(Map<String, Symbol> inputs,
+          Map<String, Symbol> outputs) {
+        List<SExpression> exprs = new LinkedList<>();
+        
+        Symbol A = outputs.get("CPU_A");
+        exprs.add(new BitVectorDeclaration(A, new Numeral("8")));
+        exprs.add(new Assertion(new EqualsExpression(A, new HexConstant("0F"))));
+        
+        return exprs;
+      }
+    }));
+    
     // execute instruction
     // AND indirect,x takes 6 cycles
     
@@ -1000,7 +1158,7 @@ public class TestAND {
         List<SExpression> exprs = new LinkedList<>();
         
         Symbol A = inputs.get("CPU_A");
-        exprs.add(new EqualsExpression(A, new HexConstant("D4")));
+        exprs.add(new EqualsExpression(A, new HexConstant("0A")));
         
         return exprs;
       }
@@ -1044,9 +1202,9 @@ public class TestAND {
     // ...  
     // $0040: 40 02
     // ...
-    // $025A: 3F
-    // with Y = $1A
-    // and expect to see $3F in A
+    // $025A: 5A
+    // with Y = $1A, A = $0F
+    // and expect to see $0A in A
     
     List<SExpression> exprs = new LinkedList<>();
     StateVariableRegistry reg = new StateVariableRegistry();
@@ -1056,7 +1214,7 @@ public class TestAND {
     burner.write(0x001, 0x40);
     burner.write(0x040, 0x40);
     burner.write(0x041, 0x02);
-    burner.write(0x25A, 0x3F);
+    burner.write(0x25A, 0x5A);
     // reset vector
     burner.write(0xFFD, 0x00); // high byte
     burner.write(0xFFC, 0x00); // low byte
@@ -1123,6 +1281,32 @@ public class TestAND {
     }
     exprs.addAll(reg.apply(verifyStateInstructionFetch));
     
+    exprs.addAll(reg.apply(new CodeGenerator(){
+      @Override
+      public Set<String> getStateVariablesRead() {
+        return new HashSet<>();
+      }
+
+      @Override
+      public Set<String> getStateVariablesWritten() {
+        return new HashSet<String>(Arrays.asList(new String[]{
+            "CPU_A"
+        }));
+      }
+
+      @Override
+      public List<SExpression> generateCode(Map<String, Symbol> inputs,
+          Map<String, Symbol> outputs) {
+        List<SExpression> exprs = new LinkedList<>();
+        
+        Symbol A = outputs.get("CPU_A");
+        exprs.add(new BitVectorDeclaration(A, new Numeral("8")));
+        exprs.add(new Assertion(new EqualsExpression(A, new HexConstant("0F"))));
+        
+        return exprs;
+      }
+    }));
+    
     // execute instruction
     // AND indirect,y takes 5 cycles if we don't cross the page
     
@@ -1155,7 +1339,7 @@ public class TestAND {
         List<SExpression> exprs = new LinkedList<>();
         
         Symbol A = inputs.get("CPU_A");
-        exprs.add(new EqualsExpression(A, new HexConstant("3F")));
+        exprs.add(new EqualsExpression(A, new HexConstant("0A")));
         
         return exprs;
       }
